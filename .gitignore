@@ -1,0 +1,19 @@
+# 🔹 Arquivos Python desnecessários
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+*.sqlite
+*.db
+
+# 🔹 Logs e arquivos temporários
+*.log
+logs/
+
+# 🔹 Configurações sensíveis
+.env
+
+# 🔹 Dependências do Python
+venv/
+env/
