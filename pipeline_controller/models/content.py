@@ -1,14 +1,23 @@
-from sqlalchemy import Column, TIMESTAMP, UUID, VARCHAR, TEXT, BYTEA, INTEGER
+from sqlalchemy import Column, TIMESTAMP, UUID, VARCHAR, TEXT, Integer, PrimaryKeyConstraint
+from sqlalchemy.dialects.postgresql import BYTEA
 import uuid
-from .base import Base
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
 
 class Content(Base):
     __tablename__ = "content"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), default=uuid.uuid4)
     content = Column(TEXT, nullable=False)
     source = Column(VARCHAR, nullable=False)
-    date_posted = Column(TIMESTAMP)
-    cluster_id = Column(INTEGER)
+    url = Column(VARCHAR)
+    user_id = Column(VARCHAR, nullable=False)
+    user_id2 = Column(VARCHAR, nullable=False)
+    date_posted = Column(TIMESTAMP, nullable=False)
+    cluster_id = Column(Integer)
     embeddings = Column(BYTEA)
-    user_id = Column(VARCHAR)
+
+    __table_args__ = (
+        PrimaryKeyConstraint("id", "source", "user_id", "user_id2", "date_posted"),  
+    )

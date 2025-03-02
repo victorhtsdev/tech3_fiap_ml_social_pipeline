@@ -1,12 +1,14 @@
 from sqlalchemy import Column, TIMESTAMP, UUID, VARCHAR, TEXT, func
 import uuid
-from .base import Base
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
 
 class PipelineLog(Base):
-    __tablename__ = "pipeline_logs"
+    __tablename__ = "pipeline_log"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    timestamp = Column(TIMESTAMP, nullable=False, default=func.now())
+    id = Column(UUID(as_uuid=True), default=uuid.uuid4, nullable=False)
+    timestamp = Column(TIMESTAMP, primary_key=True, nullable=False, default=func.now())
     stage = Column(VARCHAR, nullable=False)  
     status = Column(VARCHAR, nullable=False) 
-    details = Column(TEXT) 
+    details = Column(TEXT)
