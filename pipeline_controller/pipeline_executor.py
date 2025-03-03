@@ -1,104 +1,50 @@
-import os
+import uuid
+from datetime import datetime
 import logging
-import openai
-import numpy as np
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import SQLAlchemyError
-from models.content import Content
-from config.database import engine
-from data_storage.data_update import update_embeddings
+import asyncio
+import calendar
+from data_storage.data_inserter import insert_pipeline_log, insert_ml_execution
+from data_storage.data_getter import get_latest_version
+from data_collector.base_collector import run_collector
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-openai.api_key = OPENAI_API_KEY
-EMBEDDING_MODEL = "text-embedding-3-large"
+def get_current_month_range():
+    today = datetime.today()
+    first_day = today.replace(day=1).strftime("%Y-%m-%d")
+    last_day = today.replace(day=calendar.monthrange(today.year, today.month)[1]).strftime("%Y-%m-%d")
+    return [(first_day, last_day)]
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+async def run_pipeline(exec_id, search, date_ranges=None):
+    execution_date = datetime.now()
 
-def fetch_texts_for_embedding(exec_id):
-    session = SessionLocal()
+    if not date_ranges:  
+        date_ranges = get_current_month_range()  
+
+    latest_version = get_latest_version(search) + 1  
+
     try:
-        logging.info(f"Fetching text for exec_id: {exec_id}")
+        insert_pipeline_log(exec_id, "Pipeline Execution", "Started", f"Pipeline execution started. Search: {search}, Exec ID: {exec_id}")
 
-        texts = session.query(Content).filter(
-            Content.embeddings.is_(None),
-            Content.id == exec_id
-        ).limit(1).all()
+        insert_ml_execution(exec_id, search, execution_date, latest_version)
 
-        if not texts:
-            logging.info(f"No records found for exec_id: {exec_id}")
-            return []
+        insert_pipeline_log(exec_id, "Data Collection", "Started", f"Starting data collection. Execution ID: {exec_id} - Search: {search}")
 
-        for record in texts:
-            logging.info(f"Original content: {record.content}")  # 🔹 Log do texto enviado para embedding
+        try:
+            run_collector("YouTube", search, date_ranges, exec_id)  
+        except Exception as e:
+            logging.error(f"❌ Data collection failed: {str(e)}")
+            insert_pipeline_log(exec_id, "Pipeline Execution", "Interrupted", "Pipeline execution interrupted due to data collection failure.")
+            return {"exec_id": str(exec_id), "execution_id": str(exec_id), "version": latest_version, "status": "Failed"}
 
-        return texts
+        insert_pipeline_log(exec_id, "Data Collection", "Success", "Data collection completed successfully.")
+        insert_pipeline_log(exec_id, "Pipeline Execution", "Completed", "Pipeline execution completed successfully.")
 
-    except SQLAlchemyError as e:
-        logging.error(f"Database error while fetching texts: {str(e)}")
-        raise
-
-    finally:
-        session.close()
-
-def generate_embeddings(text_list):
-    try:
-        logging.info(f"Generating embeddings for {len(text_list)} text(s)")
-
-        client = openai.OpenAI()
-        response = client.embeddings.create(
-            input=text_list,
-            model=EMBEDDING_MODEL
-        )
-
-        embeddings = [np.array(item.embedding, dtype=np.float32).tobytes() for item in response.data]
-
-        for text, embedding in zip(text_list, response.data):
-            logging.info(f"🔹 Sent text: {text}")  # Log do texto enviado
-            logging.info(f"🔹 Generated embedding (first 5 values): {embedding.embedding[:5]}")  # Mostra só os primeiros valores para não poluir
-
-        logging.info(f"Generated {len(embeddings)} embedding(s) successfully.")
-        return embeddings
+        return {"exec_id": str(exec_id), "execution_id": str(exec_id), "version": latest_version, "status": "Success"}
 
     except Exception as e:
-        logging.error(f"Error generating embeddings: {str(e)}")
-        raise
+        error_message = f"❌ Pipeline execution failed: {str(e)}"
+        logging.error(error_message)
+        insert_pipeline_log(exec_id, "Pipeline Execution", "Error", error_message)
 
-def process_embeddings(exec_id):  
-    session = SessionLocal()
-
-    try:
-        logging.info(f"Starting embedding process for exec_id: {exec_id}")
-
-        records = fetch_texts_for_embedding(exec_id)
-
-        if not records:
-            logging.info(f"No records to process for exec_id: {exec_id}")
-            return
-
-        texts = [record.content for record in records]
-        logging.info(f"Processing {len(texts)} text(s) for embedding.")
-
-        embeddings = generate_embeddings(texts)
-
-        if len(embeddings) == len(records):
-            logging.info(f"Updating {len(records)} record(s) with embeddings in database.")
-
-            update_embeddings(session, records, embeddings)
-            session.commit()
-
-            logging.info(f"✅ Successfully updated {len(records)} embeddings in database.")
-
-        else:
-            logging.error("Embedding count does not match text count.")
-            raise ValueError("Embedding count mismatch.")
-
-    except Exception as e:
-        logging.error(f"Embedding processing error: {str(e)}")
-        session.rollback()
-        raise
-
-    finally:
-        session.close()
-        logging.info("Embedding process completed.")
+        return {"exec_id": str(exec_id), "execution_id": str(exec_id), "version": latest_version, "status": "Failed"}
