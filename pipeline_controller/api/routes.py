@@ -12,9 +12,8 @@ def run_pipeline_api():
     search = data.get("search", "Nintendo Switch 2")
     date_ranges = data.get("date_ranges", [])
 
-    exec_id = uuid.uuid4()  # 🔹 Gera o exec_id da requisição
+    exec_id = uuid.uuid4()
 
-    # 🔹 Executa o pipeline em uma thread separada
     thread = threading.Thread(target=lambda: asyncio.run(run_pipeline(exec_id, search, date_ranges)))
     thread.start()
 

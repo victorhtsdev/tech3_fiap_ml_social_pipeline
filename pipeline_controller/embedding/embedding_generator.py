@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 openai.api_key = OPENAI_API_KEY
-EMBEDDING_MODEL = "text-embedding-3-large"
+EMBEDDING_MODEL = "text-embedding-3-small"
 BATCH_SIZE = int(os.getenv("EMBEDDING_BATCH_SIZE", 1))
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -52,7 +52,7 @@ def process_embeddings(exec_id):
 
         while remaining_records:
             batch = remaining_records[:BATCH_SIZE]
-            texts = [record.content for record in batch]
+            texts = [record.content_processed for record in batch]
 
             embeddings = generate_embeddings(texts)
 

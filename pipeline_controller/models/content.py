@@ -10,6 +10,7 @@ class Content(Base):
 
     id = Column(UUID(as_uuid=True), default=uuid.uuid4)
     content = Column(TEXT, nullable=False)
+    content_processed = Column(TEXT, nullable=True)  
     source = Column(VARCHAR, nullable=False)
     url = Column(VARCHAR)
     user_id = Column(VARCHAR, nullable=False)

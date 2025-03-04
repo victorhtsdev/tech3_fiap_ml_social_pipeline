@@ -2,7 +2,13 @@ import logging
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from models.content import Content
+from sqlalchemy.orm import sessionmaker
+from config.database import engine
 import numpy as np
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def update_embeddings(session: Session, records, embeddings):
     try:
@@ -15,7 +21,6 @@ def update_embeddings(session: Session, records, embeddings):
                 "date_posted": record.date_posted
             }
 
-            # 🔹 Garante que os embeddings sejam armazenados corretamente como BYTEA
             if not isinstance(embedding, bytes):
                 embedding = np.array(embedding, dtype=np.float32).tobytes()
 
@@ -28,9 +33,82 @@ def update_embeddings(session: Session, records, embeddings):
                 logging.info(f"✅ Updated embeddings for ID: {record.id}")
 
         session.commit()
-        logging.info(f"✅ Successfully updated {len(records)} records in database.")
+        logging.info(f"✅ Successfully updated {len(records)} records in the database.")
 
     except SQLAlchemyError as e:
         session.rollback()
         logging.error(f"❌ Error updating embeddings: {str(e)}")
         raise
+
+def update_cluster_ids(records, labels):
+    session = SessionLocal()
+    try:
+        for record, cluster_id in zip(records, labels):
+            filters = {
+                "id": record["id"],
+                "source": record["source"],
+                "user_id": record["user_id"],
+                "user_id2": record["user_id2"],
+                "date_posted": record["date_posted"]
+            }
+
+            cluster_id = int(cluster_id)
+
+            affected_rows = (
+                session.query(Content)
+                .filter_by(**filters)
+                .update({"cluster_id": cluster_id})
+            )
+
+        session.commit()
+        logging.info(f"✅ Successfully updated {len(records)} records in the database.")
+
+    except SQLAlchemyError as e:
+        session.rollback()
+        logging.error(f"❌ Error updating clusters: {str(e)}")
+        raise
+
+    except Exception as e:
+        session.rollback()
+        logging.error(f"❌ Unexpected error updating clusters: {str(e)}")
+        raise
+
+    finally:
+        session.close()
+
+def update_processed_content(records):
+    session = SessionLocal()
+    try:
+        for record in records:
+            filters = {
+                "id": record["id"],
+                "source": record["source"],
+                "user_id": record["user_id"],
+                "user_id2": record["user_id2"],
+                "date_posted": record["date_posted"]
+            }
+
+            affected_rows = (
+                session.query(Content)
+                .filter_by(**filters)
+                .update({"content_processed": record["content_processed"]})
+            )
+
+            if affected_rows == 0:
+                logging.warning(f"⚠️ No rows updated for ID: {record['id']}. Check primary key!")
+
+        session.commit()
+        logging.info(f"✅ Successfully updated {len(records)} records in content_processed.")
+
+    except SQLAlchemyError as e:
+        session.rollback()
+        logging.error(f"❌ Error updating content_processed: {str(e)}")
+        raise
+
+    except Exception as e:
+        session.rollback()
+        logging.error(f"❌ Unexpected error updating content_processed: {str(e)}")
+        raise
+
+    finally:
+        session.close()

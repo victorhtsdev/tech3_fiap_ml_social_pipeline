@@ -6,6 +6,7 @@ import calendar
 from data_storage.data_inserter import insert_pipeline_log, insert_ml_execution
 from data_storage.data_getter import get_latest_version
 from data_collector.base_collector import run_collector
+from data_processing.processing import process_content_data
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
@@ -17,7 +18,8 @@ def get_current_month_range():
 
 async def run_pipeline(exec_id, search, date_ranges=None):
     execution_date = datetime.now()
-
+    search = search.upper()
+    
     if not date_ranges:  
         date_ranges = get_current_month_range()  
 
@@ -38,6 +40,18 @@ async def run_pipeline(exec_id, search, date_ranges=None):
             return {"exec_id": str(exec_id), "execution_id": str(exec_id), "version": latest_version, "status": "Failed"}
 
         insert_pipeline_log(exec_id, "Data Collection", "Success", "Data collection completed successfully.")
+
+        insert_pipeline_log(exec_id, "Content Processing", "Started", f"Starting content processing for Exec ID: {exec_id}")
+
+        try:
+            process_content_data(exec_id)
+        except Exception as e:
+            logging.error(f"❌ Content processing failed: {str(e)}")
+            insert_pipeline_log(exec_id, "Content Processing", "Error", f"Content processing failed for Exec ID: {exec_id}. Error: {str(e)}")
+            return {"exec_id": str(exec_id), "execution_id": str(exec_id), "version": latest_version, "status": "Failed"}
+
+        insert_pipeline_log(exec_id, "Content Processing", "Success", "Content processing completed successfully.")
+
         insert_pipeline_log(exec_id, "Pipeline Execution", "Completed", "Pipeline execution completed successfully.")
 
         return {"exec_id": str(exec_id), "execution_id": str(exec_id), "version": latest_version, "status": "Success"}

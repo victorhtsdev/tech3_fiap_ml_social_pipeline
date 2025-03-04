@@ -6,6 +6,8 @@ __pycache__/
 *.egg-info/
 *.sqlite
 *.db
+pipeline_controller/teste.py
+pipeline_controller/analysis/
 
 # 🔹 Logs e arquivos temporários
 *.log
