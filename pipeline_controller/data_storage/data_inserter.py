@@ -7,44 +7,52 @@ from models.pipeline_log import PipelineLog
 from models.ml_execution import MLExecution
 from models.ml_cluster import MLCluster
 from datetime import datetime
+from models.content_processed import ContentProcessed
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def insert_content_dataframe(df, source, execution_id):
-    
+
     if df.empty:
         logging.warning("⚠️ The provided DataFrame is empty. No data inserted.")
         return
 
     session = SessionLocal()
     try:
+        exists = session.query(Content).filter(Content.exec_id == execution_id).first()
+
+        if exists:
+            logging.error(f"❌ Data for execution_id {execution_id} already exists. Skipping insertion.")
+            return 
+
+        content_id_counter = 1  
+
         for _, row in df.iterrows():
             content_entry = Content(
-                id=execution_id,
+                exec_id=execution_id,
+                content_id=content_id_counter, 
                 content=row["comment_text"],
                 source=source,
-                url=row["video_url"],
-                user_id=row["channel_title"],  
-                user_id2=row["author"], 
-                date_posted=row["comment_date"],
-                cluster_id=None,
-                embeddings=None,
+                url=row.get("video_url"),
+                user_id=row.get("channel_title"),
+                user_id2=row.get("author"),
+                date_posted=row.get("comment_date")
             )
             session.add(content_entry)
-            try:
-                session.commit()
-            except IntegrityError:
-                session.rollback()
-                logging.warning(f"⚠️ Duplicate entry detected and skipped for comment: {row['comment_text']}")
-                continue  # Continua para o próximo comentário
-            except SQLAlchemyError as e:
-                session.rollback()
-                logging.error(f"❌ Database insertion error: {str(e)}")
-                raise  # Propaga o erro para ser tratado na camada superior
+            content_id_counter += 1  
 
-        logging.info(f"✅ Content data from {source} inserted successfully with execution_id: {execution_id}")
+        try:
+            session.commit()
+            logging.info(f"✅ Content data from {source} inserted successfully with execution_id: {execution_id}")
+        except IntegrityError:
+            session.rollback()
+            logging.warning(f"⚠️ Duplicate entry detected and skipped for execution_id: {execution_id}")
+        except SQLAlchemyError as e:
+            session.rollback()
+            logging.error(f"❌ Database insertion error: {str(e)}")
+            raise  
 
     except Exception as e:
         logging.error(f"❌ Unexpected error: {str(e)}")
@@ -130,3 +138,38 @@ def insert_clusters(exec_id, clusters_data: dict):
 
     finally:
         session.close()
+
+def insert_content_processed(df, exec_id):
+    if df.empty:
+        logging.warning("⚠️ The provided DataFrame is empty. No data inserted.")
+        return
+
+    session = SessionLocal()
+    try:
+        for _, row in df.iterrows():
+            processed_entry = ContentProcessed(
+                exec_id=exec_id,
+                content_id=row["content_id"],
+                processed_id=row["processed_id"], 
+                sentence=row["sentence"],
+                embeddings=row.get("embeddings"), 
+                cluster_id=row.get("cluster_id")   
+            )
+
+            session.add(processed_entry)
+
+        session.commit()
+        logging.info(f"✅ Processed content inserted successfully for exec_id: {exec_id}")
+
+    except IntegrityError:
+        session.rollback()
+        logging.warning(f"⚠️ Duplicate entry detected and skipped for exec_id: {exec_id}")
+
+    except SQLAlchemyError as e:
+        session.rollback()
+        logging.error(f"❌ Database insertion error: {str(e)}")
+        raise  
+
+    finally:
+        session.close()
+

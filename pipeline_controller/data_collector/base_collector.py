@@ -27,4 +27,4 @@ def run_collector(source, search, date_ranges, exec_id=None):
         error_message = f"❌ Error during data collection: {str(e)}"
         logging.error(error_message)
         insert_pipeline_log(exec_id, "Data Collection", "Error", error_message)
-        raise  # 🔹 Propaga o erro para `run_pipeline()`
+        raise 

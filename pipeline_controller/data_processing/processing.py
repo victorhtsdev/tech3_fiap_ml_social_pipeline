@@ -54,3 +54,10 @@ def process_content_data(exec_id):
     except Exception as e:
         logging.error(f"❌ Unexpected error: {str(e)}")
         raise
+
+def remove_urls_mentions_html(text):
+    text = re.sub(r'http\S+|www\S+', '', text)  
+    text = re.sub(r'@\w+', '', text)  
+    text = re.sub(r'<a\s+href[^>]*', '', text)  
+    text = re.sub(r'<.*?>', '', text)  
+    return text

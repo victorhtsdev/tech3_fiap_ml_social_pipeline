@@ -3,6 +3,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import desc
 from config.database import engine
 from models.ml_execution import MLExecution
+from models.content_processed import ContentProcessed
 from models.content import Content
 import logging
 
@@ -28,18 +29,18 @@ def get_latest_version(search):
 def get_texts_for_embedding(exec_id):
     session = SessionLocal()
     try:
-        logging.info(f"Fetching all texts for exec_id: {exec_id}")
+        logging.info(f"Fetching all sentences for exec_id: {exec_id}")
 
-        texts = session.query(Content).filter(
-            (Content.embeddings.is_(None)) | (Content.embeddings == b''),
-            Content.id == exec_id
+        sentences = session.query(ContentProcessed).filter(
+            (ContentProcessed.embeddings.is_(None)) | (ContentProcessed.embeddings == b''),
+            ContentProcessed.exec_id == exec_id
         ).all()
 
-        if not texts:
+        if not sentences:
             logging.info(f"No records found for exec_id: {exec_id}")
             return []
 
-        return texts
+        return sentences
 
     except SQLAlchemyError as e:
         logging.error(f"Database error: {str(e)}")
@@ -49,30 +50,33 @@ def get_texts_for_embedding(exec_id):
         session.close()
 
 def get_content_data(exec_id):
+
     session = SessionLocal()
     try:
-        logging.info(f"Fetching content and embeddings for exec_id: {exec_id}")
+        logging.info(f"🔍 Fetching content for exec_id: {exec_id}")
 
         content_records = session.query(
-            Content.id,
+            Content.exec_id,
+            Content.content_id,
             Content.content,
-            Content.embeddings,
-            Content.date_posted,
             Content.source,
+            Content.url,
             Content.user_id,
-            Content.user_id2
-        ).filter(Content.id == exec_id).all()
+            Content.user_id2,
+            Content.date_posted
+        ).filter(Content.exec_id == exec_id).all()
 
         if not content_records:
-            logging.warning(f"No records found for exec_id: {exec_id}")
+            logging.warning(f"⚠️ No records found for exec_id: {exec_id}")
             return []
 
         return [
             {
-                "id": record.id,
+                "exec_id": record.exec_id,
+                "content_id": record.content_id,
                 "content": record.content,
-                "embeddings": record.embeddings,
                 "source": record.source,
+                "url": record.url,
                 "user_id": record.user_id,
                 "user_id2": record.user_id2,
                 "date_posted": record.date_posted,
@@ -81,12 +85,11 @@ def get_content_data(exec_id):
         ]
     
     except SQLAlchemyError as e:
-        logging.error(f"Database error in get_content_data: {str(e)}")
+        logging.error(f"❌ Database error in get_content_data: {str(e)}")
         raise RuntimeError(f"Error in get_content_data: {str(e)}")
 
     finally:
         session.close()
-
 
 def get_ml_execution_data(exec_id: str):
     session = SessionLocal()
@@ -109,6 +112,43 @@ def get_ml_execution_data(exec_id: str):
     except SQLAlchemyError as e:
         logging.error(f"Database error in get_ml_execution_data: {str(e)}")
         raise RuntimeError(f"Error in get_ml_execution_data: {str(e)}")
+
+    finally:
+        session.close()
+
+def get_content_processed_data(exec_id):
+    session = SessionLocal()
+    try:
+        logging.info(f"Fetching processed content for exec_id: {exec_id}")
+
+        processed_records = session.query(
+            ContentProcessed.exec_id,
+            ContentProcessed.content_id,
+            ContentProcessed.processed_id,
+            ContentProcessed.sentence,
+            ContentProcessed.embeddings,
+            ContentProcessed.cluster_id
+        ).filter(ContentProcessed.exec_id == exec_id).all()
+
+        if not processed_records:
+            logging.warning(f"No records found for exec_id: {exec_id}")
+            return []
+
+        return [
+            {
+                "exec_id": record.exec_id,
+                "content_id": record.content_id,
+                "processed_id": record.processed_id,
+                "sentence": record.sentence,
+                "embeddings": record.embeddings,
+                "cluster_id": record.cluster_id
+            }
+            for record in processed_records
+        ]
+
+    except SQLAlchemyError as e:
+        logging.error(f"Database error in get_content_processed_data: {str(e)}")
+        raise RuntimeError(f"Error in get_content_processed_data: {str(e)}")
 
     finally:
         session.close()

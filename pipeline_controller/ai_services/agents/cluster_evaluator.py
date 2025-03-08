@@ -98,16 +98,13 @@ def generate_prompt(clusters, current_k, language, topic):
     return prompt.strip()
 
 def evaluate_clusters(clusters_json):
-    """
-    Recebe um JSON contendo os clusters e seus comentários,
-    chama o LLM para avaliar todos os clusters de uma vez e retorna um JSON consolidado.
-    """
+
     if not isinstance(clusters_json, dict) or "clusters" not in clusters_json or "current_k" not in clusters_json or "topic" not in clusters_json:
         raise ValueError("Formato inválido. Esperado {'clusters': {cluster_id: [comments]}, 'current_k': k_value, 'topic': 'search_topic'}")
 
     clusters = clusters_json["clusters"]
     current_k = clusters_json["current_k"]
-    topic = clusters_json["topic"]  # 🔹 Tema da busca
+    topic = clusters_json["topic"]  
 
     prompt = generate_prompt(clusters, current_k, AGENT_LANGUAGE, topic)
 

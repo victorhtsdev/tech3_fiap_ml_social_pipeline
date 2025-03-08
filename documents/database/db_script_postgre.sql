@@ -6,16 +6,15 @@ CREATE TABLE ml_execution (
 );
 
 CREATE TABLE content (
-    id UUID DEFAULT gen_random_uuid(),
+    exec_id UUID NOT NULL, 
+    content_id INTEGER NOT NULL, 
     content TEXT NOT NULL,
     source VARCHAR NOT NULL,
     url VARCHAR,
     user_id VARCHAR NOT NULL,
-	user_id2 VARCHAR NOT NULL,
+    user_id2 VARCHAR NOT NULL,
     date_posted TIMESTAMP NOT NULL,
-    cluster_id INTEGER,
-    embeddings BYTEA,
-    PRIMARY KEY (id, source, user_id,user_id2, date_posted) 
+    PRIMARY KEY (exec_id, content_id) 
 );
 
 CREATE TABLE pipeline_log (
@@ -39,4 +38,14 @@ CREATE TABLE ml_clusters (
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     PRIMARY KEY (exec_id, cluster),
     FOREIGN KEY (exec_id) REFERENCES ml_execution(id) ON DELETE CASCADE
+);
+
+CREATE TABLE content_processed (
+    exec_id UUID NOT NULL, 
+    content_id INTEGER NOT NULL, 
+    processed_id INTEGER NOT NULL, 
+    sentence text ,
+    embeddings BYTEA,
+    cluster_id INTEGER,
+    PRIMARY KEY (exec_id, content_id, processed_id)
 );

@@ -1,33 +1,40 @@
+import os
 import faiss
 import numpy as np
 import random
+from sklearn.metrics import silhouette_score
 
-def run_kmeans_faiss(embeddings, k, seed=42):
+SEED = int(os.getenv("SEED", 42))
+
+def run_kmeans_faiss(reduced_embeddings, k):
     try:
-        np.random.seed(seed)
-        random.seed(seed)
-        faiss.rand(seed)
-        
+        np.random.seed(SEED)
+        random.seed(SEED)
+        faiss.rand(SEED)
+
+        reduced_embeddings = np.ascontiguousarray(reduced_embeddings, dtype=np.float32)
+
         kmeans = faiss.Kmeans(
-            d=embeddings.shape[1], 
+            d=reduced_embeddings.shape[1], 
             k=k, 
             niter=300, 
             nredo=50, 
             spherical=True
         )
 
-        kmeans.seed = seed 
+        kmeans.seed = SEED
+        kmeans.train(reduced_embeddings)
 
-        kmeans.train(embeddings)
-
-        _, labels = kmeans.index.search(embeddings, 1)
-
+        _, labels = kmeans.index.search(reduced_embeddings, 1)
         centroids = np.array(kmeans.centroids)
+
+        silhouette = silhouette_score(reduced_embeddings, labels.flatten(), metric='cosine')
 
         return {
             "labels": labels.flatten(),
-            "centroids": centroids
+            "centroids": centroids,
+            "silhouette_score": silhouette
         }
 
     except Exception as e:
-        raise RuntimeError(f"Error in faiss_clustering.py: {str(e)}")
+        raise RuntimeError(f"Error in run_kmeans_faiss: {str(e)}")
