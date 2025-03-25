@@ -17,12 +17,13 @@ def run_kmeans_faiss(reduced_embeddings, k):
         kmeans = faiss.Kmeans(
             d=reduced_embeddings.shape[1], 
             k=k, 
-            niter=300, 
+            niter=400, 
             nredo=50, 
-            spherical=True
+            spherical=True, 
+            verbose=True, 
+            seed=SEED
         )
 
-        kmeans.seed = SEED
         kmeans.train(reduced_embeddings)
 
         _, labels = kmeans.index.search(reduced_embeddings, 1)
@@ -37,4 +38,4 @@ def run_kmeans_faiss(reduced_embeddings, k):
         }
 
     except Exception as e:
-        raise RuntimeError(f"Error in run_kmeans_faiss: {str(e)}")
+        raise RuntimeError(f"Erro em run_kmeans_faiss: {str(e)}")

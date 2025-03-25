@@ -8,6 +8,7 @@ import numpy as np
 from nltk.tokenize import PunktSentenceTokenizer
 import pandas as pd
 import emoji
+import string
 
 load_dotenv()
 
@@ -71,4 +72,19 @@ def normalize_text(text):
 def remove_stopwords(text):
     words = text.split()
     filtered_words = [word for word in words if word not in stop_words]
+    return " ".join(filtered_words)
+
+def clean_for_word_cloud(text):
+    if not isinstance(text, str):
+        return ""
+
+    text = remove_urls_mentions_html(text)
+    text = remove_emojis(text)
+    text = normalize_text(text)
+
+    words = re.findall(r"\b\w+\b", text.lower())
+
+    all_stopwords = stop_words  
+
+    filtered_words = [word for word in words if word not in all_stopwords]
     return " ".join(filtered_words)

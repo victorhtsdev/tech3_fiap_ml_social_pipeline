@@ -9,7 +9,7 @@ def compute_pca(embeddings):
     try:
         np.random.seed(SEED)
 
-        pca = PCA(n_components=4, random_state=SEED)
+        pca = PCA(n_components=10, random_state=SEED)
         reduced_embeddings = pca.fit_transform(embeddings)
 
         return 2, reduced_embeddings 

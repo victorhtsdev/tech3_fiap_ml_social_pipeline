@@ -85,19 +85,21 @@ def insert_pipeline_log(log_id, stage, status, details):
         session.close()
 
 
-def insert_ml_execution(exec_id, search, date, version):
-
+def insert_ml_execution(exec_id, search, date, classification_model_version, classification_model_name, classification_model_type, date_ranges):
     session = SessionLocal()
     try:
         execution_entry = MLExecution(
             id=exec_id,
             search=search,
             date=date,
-            version=version
+            classification_model_version=classification_model_version,
+            classification_model_name=classification_model_name,
+            classification_model_type=classification_model_type,
+            date_ranges=date_ranges if date_ranges else None  
         )
         session.add(execution_entry)
         session.commit()
-        logging.info(f"✅ Execution registered: {date} - Version {version} - Search: {search} (ID: {exec_id})")
+        logging.info(f"✅ Execution registered: {date} - Search: {search} (ID: {exec_id})")
 
     except SQLAlchemyError as e:
         session.rollback()

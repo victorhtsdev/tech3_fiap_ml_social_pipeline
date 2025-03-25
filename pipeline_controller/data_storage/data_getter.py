@@ -4,27 +4,20 @@ from sqlalchemy import desc
 from config.database import engine
 from models.ml_execution import MLExecution
 from models.content_processed import ContentProcessed
+from models.pipeline_log import PipelineLog
 from models.content import Content
 import logging
+from sqlalchemy.sql import func
+import numpy as np
+from clustering.pca_reduction import compute_pca
+from collections import Counter
+from data_processing.text_cleaning import clean_for_word_cloud,normalize_text
+from config.category_colors import get_category_colors_list
+import re
+import random
+
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-def get_latest_version(search):
-    session = SessionLocal()
-    try:
-        latest_execution = session.query(MLExecution.version)\
-            .filter(MLExecution.search == search)\
-            .order_by(desc(MLExecution.version))\
-            .first()
-        
-        return latest_execution.version if latest_execution else 0
-
-    except SQLAlchemyError as e:
-        session.rollback()
-        return 0  
-
-    finally:
-        session.close()
 
 def get_texts_for_embedding(exec_id):
     session = SessionLocal()
@@ -91,23 +84,33 @@ def get_content_data(exec_id):
     finally:
         session.close()
 
-def get_ml_execution_data(exec_id: str):
+def get_ml_execution_data(exec_id: str = None):
     session = SessionLocal()
     try:
-        logging.info(f"Fetching ML execution data for exec_id: {exec_id}")
-
-        result = session.query(MLExecution).filter(MLExecution.id == exec_id).first()
-
-        if not result:
-            logging.warning(f"No execution data found for exec_id: {exec_id}")
-            return None
-
-        return {
-            "id": str(result.id),
-            "search": result.search,
-            "date": result.date,
-            "version": result.version
-        }
+        if exec_id:
+            logging.info(f"Fetching ML execution data for exec_id: {exec_id}")
+            result = session.query(MLExecution).filter(MLExecution.id == exec_id).first()
+            if not result:
+                logging.warning(f"No execution data found for exec_id: {exec_id}")
+                return None
+            return {
+                "id": str(result.id),
+                "search": result.search,
+                "date": result.date,
+                "version": result.version
+            }
+        else:
+            logging.info("Fetching all ML execution data")
+            results = session.query(MLExecution).all()
+            return [
+                {
+                    "id": str(record.id),
+                    "search": record.search,
+                    "date": record.date,
+                    "version": record.version
+                }
+                for record in results
+            ]
 
     except SQLAlchemyError as e:
         logging.error(f"Database error in get_ml_execution_data: {str(e)}")
@@ -127,7 +130,8 @@ def get_content_processed_data(exec_id):
             ContentProcessed.processed_id,
             ContentProcessed.sentence,
             ContentProcessed.embeddings,
-            ContentProcessed.cluster_id
+            ContentProcessed.label,  
+            ContentProcessed.sentiment,
         ).filter(ContentProcessed.exec_id == exec_id).all()
 
         if not processed_records:
@@ -141,7 +145,8 @@ def get_content_processed_data(exec_id):
                 "processed_id": record.processed_id,
                 "sentence": record.sentence,
                 "embeddings": record.embeddings,
-                "cluster_id": record.cluster_id
+                "label": record.label,  
+                "sentiment": record.sentiment 
             }
             for record in processed_records
         ]
@@ -149,6 +154,387 @@ def get_content_processed_data(exec_id):
     except SQLAlchemyError as e:
         logging.error(f"Database error in get_content_processed_data: {str(e)}")
         raise RuntimeError(f"Error in get_content_processed_data: {str(e)}")
+
+    finally:
+        session.close()
+
+
+def get_latest_ml_execution():
+    session = SessionLocal()
+    try:
+        logging.info("Fetching latest ML execution data for each unique search")
+
+        subquery = (
+            session.query(
+                MLExecution.search,
+                func.max(MLExecution.date).label("latest_date")
+            )
+            .group_by(MLExecution.search)
+            .subquery()
+        )
+
+        results = (
+            session.query(MLExecution)
+            .join(subquery, (MLExecution.search == subquery.c.search) & (MLExecution.date == subquery.c.latest_date))
+            .order_by(desc(MLExecution.date))
+            .all()
+        )
+
+        return [
+            {
+                "id": str(record.id),
+                "search": record.search,
+                "date": record.date,
+                "classification_model_version": record.classification_model_version,
+                "classification_model_name": record.classification_model_name,
+                "classification_model_type": record.classification_model_type,
+                "date_ranges": record.date_ranges
+            }
+            for record in results
+        ]
+
+    except SQLAlchemyError as e:
+        logging.error(f"❌ Database error in get_latest_ml_execution: {str(e)}")
+        raise RuntimeError(f"Error in get_latest_ml_execution: {str(e)}")
+
+    finally:
+        session.close()
+
+STAGES = [
+    "Data Collection",
+    "Preprocessing Data",
+    "Pipeline Execution"
+]
+
+DEFAULT_STATUS = "Not Started"
+
+def get_pipeline_status(exec_id):
+    session = SessionLocal()
+    try:
+        logging.info(f"Fetching execution data for exec_id: {exec_id}")
+
+        query_results = (
+            session.query(PipelineLog)
+            .filter(PipelineLog.id == exec_id)
+            .order_by(PipelineLog.timestamp.asc())
+            .all()
+        )
+
+        stage_status = {}
+
+        for record in query_results:
+            stage_status[record.stage] = record.status
+
+        if not stage_status:
+            return {
+                "execution_id": exec_id,
+                "stages": [{"name": stage, "status": DEFAULT_STATUS} for stage in STAGES]
+            }
+
+        if any(status == "Error" for stage, status in stage_status.items() if stage != "Pipeline Execution"):
+            stage_status["Pipeline Execution"] = "Error"
+
+        response = {
+            "execution_id": exec_id,
+            "stages": [
+                {"name": stage, "status": stage_status.get(stage, DEFAULT_STATUS)}
+                for stage in STAGES
+            ]
+        }
+
+        return response
+
+    except Exception as e:
+        logging.error(f"Error fetching execution status: {str(e)}")
+        return {
+            "execution_id": exec_id,
+            "stages": [{"name": stage, "status": DEFAULT_STATUS} for stage in STAGES]
+        }
+
+    finally:
+        session.close()
+
+def get_ml_executions_by_search(search: str):
+    session = SessionLocal()
+    try:
+        search_upper = search.upper()
+        logging.info(f"Fetching all ML execution records with search = {search_upper}")
+
+        results = (
+            session.query(MLExecution)
+            .filter(func.upper(MLExecution.search) == search_upper)  
+            .order_by(MLExecution.date.desc())
+            .all()
+        )
+
+        if not results:
+            logging.warning(f"No ML execution records found for search: {search_upper}")
+            return []
+
+        return [
+            {
+                "id": str(record.id),
+                "search": record.search,
+                "date": record.date,
+                "classification_model_version": record.classification_model_version,
+                "classification_model_name": record.classification_model_name,
+                "classification_model_type": record.classification_model_type,
+                "date_ranges": record.date_ranges
+            }
+            for record in results
+        ]
+
+    except SQLAlchemyError as e:
+        logging.error(f"❌ Database error in get_ml_executions_by_search: {str(e)}")
+        raise RuntimeError(f"Error in get_ml_executions_by_search: {str(e)}")
+
+    finally:
+        session.close()
+
+def get_embeddings_by_exec_id(exec_id, max_samples=100):
+    session = SessionLocal()
+    try:
+        logging.info(f"🔍 Fetching embeddings for exec_id: {exec_id}")
+
+        records = session.query(
+            ContentProcessed.sentence,
+            ContentProcessed.embeddings,
+            ContentProcessed.label,
+            ContentProcessed.content_id  
+        ).filter(ContentProcessed.exec_id == exec_id).all()
+
+        if not records:
+            logging.warning(f"⚠️ No embeddings found for exec_id: {exec_id}")
+            return []
+
+        labels_to_exclude = {}
+        category_dict = {}
+
+        for record in records:
+            if record.embeddings and record.label not in labels_to_exclude:
+                if record.label not in category_dict:
+                    category_dict[record.label] = []
+                category_dict[record.label].append((record.sentence, record.embeddings, record.content_id)) 
+
+        max_category_size = max(len(items) for items in category_dict.values())
+
+        selected_sentences = []
+        selected_embeddings = []
+        selected_labels = []
+        selected_content_ids = []
+
+        for label, items in category_dict.items():
+            category_size = len(items)
+            proportion = category_size / max_category_size
+            num_samples = max(1, int(proportion * max_samples))
+
+            sampled_items = random.sample(items, min(num_samples, len(items)))
+
+            for sentence, embedding, content_id in sampled_items:
+                selected_sentences.append(sentence)
+                selected_embeddings.append(np.frombuffer(embedding, dtype=np.float32))
+                selected_labels.append(label)
+                selected_content_ids.append(content_id)
+
+        if len(selected_embeddings) == 0:
+            logging.warning(f"⚠️ No data left after sampling for exec_id: {exec_id}")
+            return []
+
+        selected_embeddings = np.array(selected_embeddings)
+
+        # 🔹 Aplicando PCA para reduzir para 10 dimensões
+        _, reduced_embeddings = compute_pca(selected_embeddings)
+
+        response_data = [
+            {
+                "sentence": selected_sentences[i],
+                "embedding": reduced_embeddings[i].tolist(), 
+                "label": selected_labels[i],
+                "content_id": selected_content_ids[i]
+            }
+            for i in range(len(selected_sentences))
+        ]
+
+        logging.info(f"✅ Successfully processed {len(response_data)} embeddings for exec_id: {exec_id} (PCA applied)")
+        return response_data
+
+    except SQLAlchemyError as e:
+        logging.error(f"❌ Database error in get_embeddings_by_exec_id: {str(e)}")
+        raise RuntimeError(f"Error in get_embeddings_by_exec_id: {str(e)}")
+
+    finally:
+        session.close()
+
+def get_svm_category_counts(exec_id):
+    session = SessionLocal()
+    try:
+        logging.info(f"🔍 Fetching SVM category counts for exec_id: {exec_id}")
+
+        labels_to_exclude = {}
+        #labels_to_exclude = {"Humor/Memes", "Mensagem para o YouTuber"}
+
+        records = session.query(ContentProcessed.label).filter(
+            ContentProcessed.exec_id == exec_id,
+            ~ContentProcessed.label.in_(labels_to_exclude)
+        ).all()
+
+        if not records:
+            logging.warning(f"⚠️ No valid predictions found for exec_id: {exec_id}")
+            return []
+
+        category_counts = {}
+        for record in records:
+            label = record.label
+            category_counts[label] = category_counts.get(label, 0) + 1
+
+        result = sorted(
+            [{"label": label, "count": count} for label, count in category_counts.items()],
+            key=lambda x: x["count"],
+            reverse=True
+        )
+
+        logging.info(f"✅ Successfully counted {len(result)} categories for exec_id: {exec_id}")
+        return result
+
+    except SQLAlchemyError as e:
+        logging.error(f"❌ Database error in get_svm_category_counts: {str(e)}")
+        raise RuntimeError(f"Error in get_svm_category_counts: {str(e)}")
+
+    finally:
+        session.close()
+
+def get_word_cloud_data(exec_id):
+    session = SessionLocal()
+    try:
+        logging.info(f"🔍 Generating word cloud data for exec_id: {exec_id}")
+
+        records = session.query(ContentProcessed.sentence, ContentProcessed.label).filter(
+            ContentProcessed.exec_id == exec_id
+        ).all()
+
+        if not records:
+            logging.warning(f"⚠️ No sentences found for exec_id: {exec_id}")
+            return {}
+
+        word_frequencies = {}
+
+        for sentence, label in records:
+            cleaned_sentence = clean_for_word_cloud(sentence)  
+            words = cleaned_sentence.split()  
+
+            if label not in word_frequencies:
+                word_frequencies[label] = Counter()
+
+            word_frequencies[label].update(words)
+
+        result = {
+            label: [{"word": word, "count": count} for word, count in freq.most_common(20)]
+            for label, freq in word_frequencies.items()
+        }
+
+        logging.info(f"✅ Word cloud data successfully generated for exec_id: {exec_id}")
+        return result
+
+    except SQLAlchemyError as e:
+        logging.error(f"❌ Database error in get_word_cloud_data: {str(e)}")
+        raise RuntimeError(f"Error in get_word_cloud_data: {str(e)}")
+
+    finally:
+        session.close()
+
+def get_category_colors(exec_id):
+    session = SessionLocal()
+    try:
+        logging.info(f"Fetching classification model type for exec_id: {exec_id}")
+
+        ml_execution = session.query(MLExecution).filter_by(id=exec_id).first()
+
+        if not ml_execution:
+            logging.warning(f"⚠️ No record found for exec_id: {exec_id}")
+            return {"error": "Exec ID not found"}, 404
+
+        classification_model_type = ml_execution.classification_model_type
+
+        colors = get_category_colors_list(classification_model_type)
+
+        if not colors:
+            logging.warning(f"⚠️ No color palette found for '{classification_model_type}'")
+            return {"error": f"Color palette not found for '{classification_model_type}'"}, 404
+
+        return colors
+
+    except SQLAlchemyError as e:
+        logging.error(f"❌ Database error in get_category_colors: {str(e)}")
+        return {"error": f"Database error: {str(e)}"}, 500
+
+    finally:
+        session.close()
+
+
+def get_content_highlight(exec_id, content_id):
+    session = SessionLocal()
+    try:
+        logging.info(f"Fetching content for exec_id: {exec_id}, content_id: {content_id}")
+
+        # 🔍 Buscar o conteúdo original
+        content_record = session.query(Content).filter_by(exec_id=exec_id, content_id=content_id).first()
+        if not content_record:
+            logging.warning(f"⚠️ No content found for exec_id: {exec_id}, content_id: {content_id}")
+            return {"error": "Content not found"}, 404
+
+        # 🔍 Buscar frases processadas
+        processed_sentences = session.query(ContentProcessed).filter_by(exec_id=exec_id, content_id=content_id).all()
+        if not processed_sentences:
+            logging.warning(f"⚠️ No processed sentences found for exec_id: {exec_id}, content_id: {content_id}")
+            return {"error": "No processed sentences found"}, 404
+
+        category_colors = get_category_colors(exec_id)
+        highlights = []
+        content_text = content_record.content
+        normalized_content_text = normalize_text(content_text)
+
+        for sentence_obj in processed_sentences:
+            fragment = sentence_obj.sentence.strip()
+            label = sentence_obj.label.strip() if sentence_obj.label else "Uncategorized"
+
+            color = category_colors.get(label, "#000000")
+
+            words = fragment.split()
+            if not words:
+                continue  
+
+            first_word = words[0]  
+            last_word = words[-1]  
+
+            first_match = re.search(re.escape(first_word), content_text, re.IGNORECASE)
+            last_match = re.search(re.escape(last_word), content_text, re.IGNORECASE)
+
+            if first_match and last_match:
+                start = first_match.start()
+                end = last_match.end()
+
+                highlights.append({
+                    "content_id": content_id,
+                    "processed_id": sentence_obj.processed_id,
+                    "fragment": fragment,
+                    "label": label,
+                    "color": color,
+                    "start": start,
+                    "end": end
+                })
+                logging.info(f"✅ Highlight encontrado: {fragment} ({start}-{end})")
+            else:
+                logging.warning(f"⚠️ Não encontrou: {fragment} dentro do content_id {content_id}")
+
+        return {
+            "content_id": content_id,
+            "content": content_text,
+            "highlights": highlights
+        }
+
+    except SQLAlchemyError as e:
+        logging.error(f"❌ Database error in get_content_highlight: {str(e)}")
+        return {"error": f"Database error: {str(e)}"}, 500
 
     finally:
         session.close()

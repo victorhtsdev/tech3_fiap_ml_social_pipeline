@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 openai.api_key = OPENAI_API_KEY
 EMBEDDING_METHOD = os.getenv("EMBEDDING_METHOD", "openai").lower()  
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")  
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-3-large")  
 BATCH_SIZE = int(os.getenv("EMBEDDING_BATCH_SIZE", 1))
 
 if EMBEDDING_METHOD == "mpnet":

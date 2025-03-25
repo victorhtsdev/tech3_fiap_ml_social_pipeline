@@ -113,3 +113,40 @@ def update_processed_content(records):
 
     finally:
         session.close()
+
+def update_classification_results(df_content_processed):
+    session = SessionLocal()
+    try:
+        logging.info(f"🔄 Updating labels for {len(df_content_processed)} records...")
+
+        for _, record in df_content_processed.iterrows():
+            filters = {
+                "exec_id": record["exec_id"],
+                "content_id": record["content_id"],
+                "processed_id": record["processed_id"]
+            }
+
+            affected_rows = (
+                session.query(ContentProcessed)
+                .filter_by(**filters)
+                .update({"label": record["label"]})
+            )
+
+            if affected_rows == 0:
+                logging.warning(f"⚠️ No rows updated for exec_id: {record['exec_id']}, content_id: {record['content_id']}, processed_id: {record['processed_id']}. Check primary key!")
+
+        session.commit()
+        logging.info(f"✅ Labels successfully updated for {len(df_content_processed)} records.")
+
+    except SQLAlchemyError as e:
+        session.rollback()
+        logging.error(f"❌ Error updating labels: {str(e)}")
+        raise
+
+    except Exception as e:
+        session.rollback()
+        logging.error(f"❌ Unexpected error updating labels: {str(e)}")
+        raise
+
+    finally:
+        session.close()

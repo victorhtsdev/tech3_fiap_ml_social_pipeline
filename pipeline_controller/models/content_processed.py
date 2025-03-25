@@ -12,7 +12,8 @@ class ContentProcessed(Base):
     processed_id = Column(Integer, nullable=False) 
     sentence = Column(TEXT, nullable=True)
     embeddings = Column(BYTEA, nullable=True)
-    cluster_id = Column(Integer, nullable=True)
+    label = Column(VARCHAR, nullable=True) 
+    sentiment = Column(VARCHAR, nullable=True)  
 
     __table_args__ = (
         PrimaryKeyConstraint("exec_id", "content_id", "processed_id"),  

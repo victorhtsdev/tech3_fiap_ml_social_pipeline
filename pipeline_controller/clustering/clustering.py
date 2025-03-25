@@ -54,7 +54,7 @@ def clustering_pipeline(exec_id):
         sys.stdout.flush()
 
         print(f"🔹 [5/6] Running K-Means clustering for multiple K values...")
-        k_values = [best_k - 2, best_k - 1, best_k, best_k + 1, best_k + 2]
+        k_values = [k for k in [best_k - 2, best_k - 1, best_k, best_k + 1, best_k + 2] if k >= 2]
         best_silhouette = float('-inf')
         best_k_final = None
         best_clustering_result = None

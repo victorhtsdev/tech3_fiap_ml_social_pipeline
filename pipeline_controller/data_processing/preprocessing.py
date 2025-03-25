@@ -7,7 +7,6 @@ from data_processing.text_cleaning import (
     remove_urls_mentions_html,
     remove_emojis,
     normalize_text,
-    remove_stopwords
 )
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -34,7 +33,6 @@ def run_preprocessing(exec_id):
             .apply(remove_urls_mentions_html)
             .apply(remove_emojis)
             .apply(normalize_text)
-            .apply(remove_stopwords)
         )
 
         df_content["sentence"] = df_content["clean_content"].apply(
@@ -53,10 +51,10 @@ def run_preprocessing(exec_id):
         insert_content_processed(df_sentences, exec_id)
 
         logging.info(f"✅ Preprocessing completed successfully for exec_id: {exec_id}")
-        insert_pipeline_log(exec_id, "Preprocessing", "Success", "Preprocessing completed successfully.")
+        insert_pipeline_log(exec_id, "Preprocessing Data", "Success", "Preprocessing completed successfully.")
     
     except Exception as e:
         error_message = f"❌ Error during preprocessing: {str(e)}"
         logging.error(error_message)
-        insert_pipeline_log(exec_id, "Preprocessing", "Error", error_message)
+        insert_pipeline_log(exec_id, "Preprocessing Data", "Error", error_message)
         raise

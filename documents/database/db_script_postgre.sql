@@ -2,7 +2,10 @@ CREATE TABLE ml_execution (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     search VARCHAR NOT NULL,
     date TIMESTAMP NOT NULL,
-    version INTEGER NOT NULL
+    classification_model_version INTEGER NULL,
+    classification_model_name VARCHAR NULL,
+    classification_model_type VARCHAR NULL,
+    date_ranges TEXT NULL 
 );
 
 CREATE TABLE content (
@@ -44,8 +47,9 @@ CREATE TABLE content_processed (
     exec_id UUID NOT NULL, 
     content_id INTEGER NOT NULL, 
     processed_id INTEGER NOT NULL, 
-    sentence text ,
+    sentence TEXT,
     embeddings BYTEA,
-    cluster_id INTEGER,
+    label VARCHAR, 
+    sentiment VARCHAR,  
     PRIMARY KEY (exec_id, content_id, processed_id)
 );
