@@ -11,6 +11,7 @@ from data_storage.data_getter import get_svm_category_counts
 from data_storage.data_getter import get_word_cloud_data
 from data_storage.data_getter import get_category_colors
 from data_storage.data_getter import get_content_highlight
+from data_storage.data_getter import get_models_info
 
 api = Blueprint("api", __name__)
 
@@ -158,5 +159,13 @@ def get_content_highlight_api():
 
         return jsonify(result)
 
+    except Exception as e:
+        return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
+    
+@api.route("/get_models", methods=["GET"])
+def get_models_api():
+    try:
+        result = get_models_info()
+        return jsonify(result)
     except Exception as e:
         return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500

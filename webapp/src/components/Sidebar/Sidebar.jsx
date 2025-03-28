@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { SidebarContainer, SearchBarWrapper, SearchBar, Divider, MenuWrapper, MenuItem } from "./styles";
+import {
+  SidebarContainer,
+  SearchBarWrapper,
+  SearchBar,
+  Divider,
+  MenuWrapper,
+  MenuItem
+} from "./styles";
 import { Search } from "lucide-react";
 import { getMenuItems } from "../../services/api";
 import ControlPanel from "../ControlPanel/ControlPanel";
 
-const Sidebar = ({ setSelectedItem }) => {
+const Sidebar = ({ setSelectedItem, setReloadAnalysisList }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [menuItems, setMenuItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
@@ -46,11 +53,11 @@ const Sidebar = ({ setSelectedItem }) => {
         <SearchBarWrapper>
           <SearchBar>
             <Search size={18} />
-            <input 
-              type="text" 
-              placeholder="Search terms..." 
-              value={searchTerm} 
-              onChange={handleSearch} 
+            <input
+              type="text"
+              placeholder="Search terms..."
+              value={searchTerm}
+              onChange={handleSearch}
             />
           </SearchBar>
         </SearchBarWrapper>
@@ -60,7 +67,7 @@ const Sidebar = ({ setSelectedItem }) => {
         <MenuWrapper>
           {filteredItems.length > 0 ? (
             filteredItems.map(item => (
-              <MenuItem 
+              <MenuItem
                 key={item.id}
                 className={selectedItem?.id === item.id ? "active" : ""}
                 onClick={() => handleSelect(item)}
@@ -74,10 +81,11 @@ const Sidebar = ({ setSelectedItem }) => {
         </MenuWrapper>
       </SidebarContainer>
 
-      <ControlPanel 
-        searchTerm={searchTerm} 
-        selectedItem={selectedItem} 
-        refreshSidebar={fetchData} 
+      <ControlPanel
+        searchTerm={searchTerm}
+        selectedItem={selectedItem}
+        refreshSidebar={fetchData}
+        setReloadAnalysisList={setReloadAnalysisList}
       />
     </>
   );

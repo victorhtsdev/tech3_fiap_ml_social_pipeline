@@ -153,9 +153,10 @@ def insert_content_processed(df, exec_id):
                 exec_id=exec_id,
                 content_id=row["content_id"],
                 processed_id=row["processed_id"], 
-                sentence=row["sentence"],
+                sentence=row.get("sentence"),
                 embeddings=row.get("embeddings"), 
-                cluster_id=row.get("cluster_id")   
+                label=row.get("label"),
+                sentiment=row.get("sentiment"),
             )
 
             session.add(processed_entry)
@@ -174,4 +175,3 @@ def insert_content_processed(df, exec_id):
 
     finally:
         session.close()
-

@@ -15,7 +15,7 @@ import { Folder, CalendarDays, Clock } from "lucide-react";
 import PipelineStatus from "../PipelineStatus/PipelineStatus";
 import { getAnalysesBySearch } from "../../services/api";
 
-const AnalysisList = ({ searchTerm, onSelectAnalysis }) => {
+const AnalysisList = ({ searchTerm, onSelectAnalysis, reloadTrigger }) => {
   const [analyses, setAnalyses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedAnalysis, setSelectedAnalysis] = useState(null);
@@ -31,7 +31,7 @@ const AnalysisList = ({ searchTerm, onSelectAnalysis }) => {
     };
 
     fetchAnalyses();
-  }, [searchTerm]);
+  }, [searchTerm, reloadTrigger]);
 
   const getDateRange = (ranges) => {
     if (ranges.length === 0) return "No ranges";

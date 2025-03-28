@@ -7,7 +7,7 @@ from data_storage.data_inserter import insert_pipeline_log, insert_ml_execution
 from data_collector.base_collector import run_collector
 from data_processing.preprocessing import run_preprocessing
 from data_processing.processing import process_content_data
-from clustering.clustering import clustering_pipeline
+from ml_classification.classification_service import run_classification
 from embedding.embedding_generator import process_embeddings
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -19,7 +19,7 @@ def get_current_month_range():
     return [(first_day, last_day)]
 
 def run_pipeline_stage(exec_id, search, stage, date_ranges=None):
-    stages = ["data_collection"]
+    stages = ["data_collection", "content_preprocessing", "embedding_generation", "run_classification"]
     #stages = ["data_collection", "content_preprocessing","content_processing", "embedding_generation", "run_classification"]
     start_index = stages.index(stage)
     
@@ -41,9 +41,9 @@ def run_pipeline_stage(exec_id, search, stage, date_ranges=None):
                 insert_pipeline_log(exec_id, "Embedding Generation", "Success", "Embedding generation completed successfully.")
 
             elif current_stage == "run_classification":
-                insert_pipeline_log(exec_id, "Classification Step", "Started", f"Starting clustering for Exec ID: {exec_id}")
-                clustering_pipeline(exec_id)
-                insert_pipeline_log(exec_id, "Classification Step", "Success", "Clustering completed successfully.")
+                insert_pipeline_log(exec_id, "ML Classification", "Started", f"Starting Classification for Exec ID: {exec_id}")
+                run_classification(exec_id)
+                insert_pipeline_log(exec_id, "ML Classification", "Success", "Classification completed successfully.")
 
         except Exception as e:
             logging.error(f"❌ {current_stage.replace('_', ' ').title()} failed: {str(e)}")

@@ -15,6 +15,7 @@ from data_processing.text_cleaning import clean_for_word_cloud,normalize_text
 from config.category_colors import get_category_colors_list
 import re
 import random
+from models.ml_model import MLModel
 
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -203,6 +204,8 @@ def get_latest_ml_execution():
 STAGES = [
     "Data Collection",
     "Preprocessing Data",
+    "Embedding Generation",
+    "ML Classification",
     "Pipeline Execution"
 ]
 
@@ -342,7 +345,6 @@ def get_embeddings_by_exec_id(exec_id, max_samples=100):
 
         selected_embeddings = np.array(selected_embeddings)
 
-        # 🔹 Aplicando PCA para reduzir para 10 dimensões
         _, reduced_embeddings = compute_pca(selected_embeddings)
 
         response_data = [
@@ -476,13 +478,11 @@ def get_content_highlight(exec_id, content_id):
     try:
         logging.info(f"Fetching content for exec_id: {exec_id}, content_id: {content_id}")
 
-        # 🔍 Buscar o conteúdo original
         content_record = session.query(Content).filter_by(exec_id=exec_id, content_id=content_id).first()
         if not content_record:
             logging.warning(f"⚠️ No content found for exec_id: {exec_id}, content_id: {content_id}")
             return {"error": "Content not found"}, 404
 
-        # 🔍 Buscar frases processadas
         processed_sentences = session.query(ContentProcessed).filter_by(exec_id=exec_id, content_id=content_id).all()
         if not processed_sentences:
             logging.warning(f"⚠️ No processed sentences found for exec_id: {exec_id}, content_id: {content_id}")
@@ -535,6 +535,45 @@ def get_content_highlight(exec_id, content_id):
     except SQLAlchemyError as e:
         logging.error(f"❌ Database error in get_content_highlight: {str(e)}")
         return {"error": f"Database error: {str(e)}"}, 500
+
+    finally:
+        session.close()
+
+def get_models_info():
+    session = SessionLocal()
+    try:
+        logging.info("Fetching model types and models grouped by type")
+
+        models = session.query(
+            MLModel.id,
+            MLModel.model_name,
+            MLModel.model_version,
+            MLModel.model_type
+        ).order_by(desc(MLModel.model_version)).all()
+
+        if not models:
+            return {"types": [], "models": {}}
+
+        types = sorted(set(m.model_type for m in models if m.model_type))
+        grouped_models = {}
+
+        for t in types:
+            grouped_models[t] = [
+                {
+                    "id": str(m.id),
+                    "label": f"{m.model_name} - v{m.model_version}"
+                }
+                for m in models if m.model_type == t
+            ]
+
+        return {
+            "types": types,
+            "models": grouped_models
+        }
+
+    except SQLAlchemyError as e:
+        logging.error(f"Database error in get_models_info: {str(e)}")
+        raise RuntimeError("Error fetching models info")
 
     finally:
         session.close()

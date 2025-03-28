@@ -28,7 +28,7 @@ export const getMenuItems = async () => {
 
 export const runPipeline = async (payload) => {
   try {
-    const response = await api.post("/run_pipeline", { search: payload.search }); 
+    const response = await api.post("/run_pipeline", payload);
     return response.data;
   } catch (error) {
     console.error("🚨 Erro ao executar o pipeline:", error);
@@ -83,6 +83,20 @@ export const getCategoryColors = async (execId) => {
   } catch (error) {
     console.error("🚨 Error fetching category colors:", error);
     return {};
+  }
+};
+
+export const getModelsInfo = async () => {
+  try {
+    const response = await api.get("/get_models");
+
+    return response.data;
+  } catch (error) {
+    console.error("🚨 Erro ao buscar modelos:", error);
+    return {
+      types: [],
+      models: {}
+    };
   }
 };
 

@@ -53,3 +53,13 @@ CREATE TABLE content_processed (
     sentiment VARCHAR,  
     PRIMARY KEY (exec_id, content_id, processed_id)
 );
+
+CREATE TABLE ml_model (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    model_version INTEGER,
+    model_name VARCHAR,
+    model_type VARCHAR,
+    model_path TEXT,
+    is_recommended BOOLEAN,
+    CONSTRAINT uq_model_name_type UNIQUE (model_version, model_name, model_type)
+);
