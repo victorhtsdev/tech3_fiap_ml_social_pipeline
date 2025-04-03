@@ -9,14 +9,16 @@ from models.content import Content
 import logging
 from sqlalchemy.sql import func
 import numpy as np
-from clustering.pca_reduction import compute_pca
+from data_processing.pca_reduction import compute_pca
 from collections import Counter
 from data_processing.text_cleaning import clean_for_word_cloud,normalize_text
 from config.category_colors import get_category_colors_list
 import re
 import random
 from models.ml_model import MLModel
-
+from models.model_metric import ModelMetric
+from models.class_metric import ClassMetric
+from collections import defaultdict
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -373,7 +375,6 @@ def get_svm_category_counts(exec_id):
         logging.info(f"🔍 Fetching SVM category counts for exec_id: {exec_id}")
 
         labels_to_exclude = {}
-        #labels_to_exclude = {"Humor/Memes", "Mensagem para o YouTuber"}
 
         records = session.query(ContentProcessed.label).filter(
             ContentProcessed.exec_id == exec_id,
@@ -405,6 +406,12 @@ def get_svm_category_counts(exec_id):
     finally:
         session.close()
 
+CUSTOM_STOPWORDS = {
+    "pra", "kkk", "kkkk", "kkkkk", "tá", "ta", "eh", "aí", "ai", "q", "vc", "tipo",
+    "né", "to", "serio", "sério", "mano", "pô", "oxe", "uai", "vcs", "mt", "tb", "tbm",
+    "blz", "vlw", "aff", "ok", "haha", "rs", "rsrs", "rsrsrs", "so", "só", "eai"
+}
+
 def get_word_cloud_data(exec_id):
     session = SessionLocal()
     try:
@@ -416,31 +423,38 @@ def get_word_cloud_data(exec_id):
 
         if not records:
             logging.warning(f"⚠️ No sentences found for exec_id: {exec_id}")
-            return {}
+            return []
 
         word_frequencies = {}
-
         for sentence, label in records:
-            cleaned_sentence = clean_for_word_cloud(sentence)  
-            words = cleaned_sentence.split()  
-
+            cleaned = clean_for_word_cloud(sentence)
+            words = cleaned.split()
+            filtered_words = [w for w in words if w not in CUSTOM_STOPWORDS]
             if label not in word_frequencies:
                 word_frequencies[label] = Counter()
+            word_frequencies[label].update(filtered_words)
 
-            word_frequencies[label].update(words)
-
-        result = {
-            label: [{"word": word, "count": count} for word, count in freq.most_common(20)]
-            for label, freq in word_frequencies.items()
+        label_counts = {
+            label: sum(counter.values())
+            for label, counter in word_frequencies.items()
         }
 
+        sorted_labels = sorted(label_counts.items(), key=lambda x: x[1], reverse=True)
+
+        ordered_result = [
+            {
+                "label": label,
+                "words": [{"word": word, "count": count} for word, count in word_frequencies[label].most_common(20)]
+            }
+            for label, _ in sorted_labels
+        ]
+
         logging.info(f"✅ Word cloud data successfully generated for exec_id: {exec_id}")
-        return result
+        return ordered_result
 
     except SQLAlchemyError as e:
         logging.error(f"❌ Database error in get_word_cloud_data: {str(e)}")
         raise RuntimeError(f"Error in get_word_cloud_data: {str(e)}")
-
     finally:
         session.close()
 
@@ -575,5 +589,174 @@ def get_models_info():
         logging.error(f"Database error in get_models_info: {str(e)}")
         raise RuntimeError("Error fetching models info")
 
+    finally:
+        session.close()
+
+def get_model_info_from_execution(exec_id):
+    session = SessionLocal()
+    try:
+        logging.info(f"🔍 Fetching model info from MLExecution for exec_id: {exec_id}")
+
+        execution = session.query(
+            MLExecution.classification_model_version,
+            MLExecution.classification_model_name,
+            MLExecution.classification_model_type
+        ).filter(MLExecution.id == exec_id).first()
+
+        if not execution:
+            logging.warning(f"⚠️ No MLExecution found for exec_id: {exec_id}")
+            return None
+
+        return {
+            "model_version": execution.classification_model_version,
+            "model_name": execution.classification_model_name,
+            "model_type": execution.classification_model_type
+        }
+
+    except SQLAlchemyError as e:
+        logging.error(f"❌ Database error in get_model_info_from_execution: {str(e)}")
+        raise RuntimeError(f"Error fetching model info from MLExecution: {str(e)}")
+
+    finally:
+        session.close()
+
+def get_model_metrics_grouped():
+    session = SessionLocal()
+    try:
+        logging.info("🔍 Fetching model metrics grouped by type and version")
+
+        models = session.query(MLModel).order_by(MLModel.model_type, MLModel.model_version).all()
+        model_metrics = session.query(ModelMetric).all()
+        class_metrics = session.query(ClassMetric).all()
+
+        grouped = defaultdict(lambda: defaultdict(list))
+
+        for model in models:
+            model_id = str(model.id)
+            model_type = model.model_type
+            version = model.model_version
+            name = model.model_name
+
+            metric = next((m for m in model_metrics if str(m.model_id) == model_id), None)
+            classes = [c for c in class_metrics if str(c.model_id) == model_id]
+
+            grouped[model_type][version].append({
+                "model_id": model_id,
+                "model_name": name,
+                "is_recommended": model.is_recommended,
+                "global_metrics": {
+                    "accuracy": metric.accuracy if metric else None,
+                    "macro_f1": metric.macro_f1 if metric else None,
+                    "weighted_f1": metric.weighted_f1 if metric else None,
+                },
+                "class_metrics": [
+                    {
+                        "class_name": c.class_name,
+                        "f1_score": c.f1_score
+                    } for c in classes
+                ]
+            })
+
+        return grouped
+
+    except SQLAlchemyError as e:
+        logging.error(f"❌ Database error while fetching model metrics: {str(e)}")
+        raise RuntimeError("Error while fetching model metrics")
+
+    finally:
+        session.close()
+
+def get_sentences_by_label_grouped(exec_id, label):
+    session = SessionLocal()
+    try:
+        logging.info(f"🔍 Fetching grouped label sentences for exec_id: {exec_id}, label: {label}")
+
+        results = (
+            session.query(
+                ContentProcessed.sentence,
+                ContentProcessed.processed_id,
+                ContentProcessed.label,
+                Content.content_id,
+                Content.exec_id,
+                Content.content
+            )
+            .join(Content, (ContentProcessed.exec_id == Content.exec_id) & (ContentProcessed.content_id == Content.content_id))
+            .filter(
+                ContentProcessed.exec_id == exec_id,
+                ContentProcessed.label == label
+            )
+            .order_by(ContentProcessed.content_id, ContentProcessed.processed_id)
+            .all()
+        )
+
+        if not results:
+            logging.warning(f"⚠️ No results found for exec_id={exec_id}, label={label}")
+            return []
+
+        grouped_data = {}
+        for r in results:
+            key = (r.exec_id, r.content_id)
+            if key not in grouped_data:
+                grouped_data[key] = {
+                    "content_id": r.content_id,
+                    "label": r.label,
+                    "original_comment": r.content,
+                    "sentences": []
+                }
+            grouped_data[key]["sentences"].append({
+                "processed_id": r.processed_id,
+                "sentence": r.sentence
+            })
+
+        return list(grouped_data.values())
+
+    except SQLAlchemyError as e:
+        logging.error(f"❌ Database error in get_sentences_by_label_grouped: {str(e)}")
+        raise RuntimeError(f"Error in get_sentences_by_label_grouped: {str(e)}")
+    finally:
+        session.close()
+
+def get_time_series_label_count(exec_id):
+    session = SessionLocal()
+    try:
+        logging.info(f"📊 Fetching time series data for exec_id: {exec_id}")
+
+        ml_execution = session.query(MLExecution).filter_by(id=exec_id).first()
+        if not ml_execution:
+            logging.warning("⚠️ MLExecution not found")
+            return []
+
+        model_type = ml_execution.classification_model_type
+        category_colors = get_category_colors_list(model_type)
+
+        results = (
+            session.query(
+                ContentProcessed.label,
+                func.date(Content.date_posted).label("date"),
+                func.count().label("count")
+            )
+            .join(Content, (ContentProcessed.exec_id == Content.exec_id) & (ContentProcessed.content_id == Content.content_id))
+            .filter(ContentProcessed.exec_id == exec_id)
+            .group_by(ContentProcessed.label, func.date(Content.date_posted))
+            .order_by(func.date(Content.date_posted))
+            .all()
+        )
+
+        response = []
+        for label, date, count in results:
+            color = category_colors.get(label, "#000000")
+            response.append({
+                "label": label,
+                "date": date.isoformat(),
+                "count": count,
+                "color": color
+            })
+
+        logging.info(f"✅ Time series data ready for exec_id: {exec_id} ({len(response)} points)")
+        return response
+
+    except SQLAlchemyError as e:
+        logging.error(f"❌ Database error in get_time_series_data: {str(e)}")
+        raise RuntimeError(f"Error in get_time_series_data: {str(e)}")
     finally:
         session.close()

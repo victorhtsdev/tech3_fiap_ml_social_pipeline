@@ -5,7 +5,6 @@ from models.content import Content
 from config.database import engine
 from models.pipeline_log import PipelineLog
 from models.ml_execution import MLExecution
-from models.ml_cluster import MLCluster
 from datetime import datetime
 from models.content_processed import ContentProcessed
 
@@ -104,38 +103,6 @@ def insert_ml_execution(exec_id, search, date, classification_model_version, cla
     except SQLAlchemyError as e:
         session.rollback()
         logging.error(f"❌ Error registering execution: {str(e)}")
-        raise  
-
-    finally:
-        session.close()
-
-def insert_clusters(exec_id, clusters_data: dict):
-    session = SessionLocal()
-    try:
-        clusters_to_insert = []
-
-        for cluster_id, cluster_info in clusters_data["clusters"].items():
-            cluster_entry = MLCluster(
-                exec_id=exec_id,
-                cluster=int(cluster_id),
-                topic=cluster_info.get("topic"),
-                pattern_found=cluster_info.get("pattern_found"),
-                keyword=cluster_info.get("keyword"),
-                conclusion=cluster_info.get("conclusion"),
-                is_consistent=cluster_info.get("is_consistent"),
-                record_count=cluster_info.get("record_count", 0),  
-                created_at=datetime.utcnow()
-            )
-
-            clusters_to_insert.append(cluster_entry)
-
-        session.add_all(clusters_to_insert)
-        session.commit()
-        logging.info(f"✅ {len(clusters_to_insert)} clusters inserted successfully.")
-
-    except SQLAlchemyError as e:
-        session.rollback()
-        logging.error(f"❌ Error inserting clusters: {str(e)}")
         raise  
 
     finally:

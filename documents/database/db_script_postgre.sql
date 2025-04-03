@@ -29,20 +29,6 @@ CREATE TABLE pipeline_log (
 	PRIMARY KEY (id,timestamp) 
 );
 	
-CREATE TABLE ml_clusters (
-    exec_id UUID NOT NULL,
-    cluster INTEGER NOT NULL,
-    topic TEXT,
-    pattern_found TEXT,
-    keyword TEXT,
-    conclusion TEXT,
-    is_consistent BOOLEAN,
-    record_count INTEGER NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (exec_id, cluster),
-    FOREIGN KEY (exec_id) REFERENCES ml_execution(id) ON DELETE CASCADE
-);
-
 CREATE TABLE content_processed (
     exec_id UUID NOT NULL, 
     content_id INTEGER NOT NULL, 
@@ -62,4 +48,18 @@ CREATE TABLE ml_model (
     model_path TEXT,
     is_recommended BOOLEAN,
     CONSTRAINT uq_model_name_type UNIQUE (model_version, model_name, model_type)
+);
+
+CREATE TABLE public.model_metric (
+    model_id UUID PRIMARY KEY REFERENCES ml_model(id) ON DELETE CASCADE,
+    accuracy REAL,
+    macro_f1 REAL,
+    weighted_f1 REAL
+);
+
+CREATE TABLE public.class_metric (
+    model_id UUID REFERENCES ml_model(id) ON DELETE CASCADE,
+    class_name TEXT,
+    f1_score REAL,
+    PRIMARY KEY (model_id, class_name)
 );

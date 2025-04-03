@@ -4,7 +4,6 @@ import openai
 import numpy as np
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
-from sentence_transformers import SentenceTransformer
 import ollama
 from models.content_processed import ContentProcessed
 from config.database import engine
@@ -19,11 +18,8 @@ EMBEDDING_METHOD = os.getenv("EMBEDDING_METHOD", "openai").lower()
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-3-large")  
 BATCH_SIZE = int(os.getenv("EMBEDDING_BATCH_SIZE", 1))
 
-if EMBEDDING_METHOD == "mpnet":
-    logging.info(f"Using SentenceTransformer ({EMBEDDING_MODEL}).")
-    st_model = SentenceTransformer(EMBEDDING_MODEL) 
 
-elif EMBEDDING_METHOD == "ollama":
+if EMBEDDING_METHOD == "ollama":
     logging.info("Using Ollama for embedding generation.")
 
 elif EMBEDDING_METHOD == "openai":
@@ -45,10 +41,6 @@ def generate_embeddings(text_list):
                 model=EMBEDDING_MODEL
             )
             embeddings = [np.array(item.embedding, dtype=np.float32).tobytes() for item in response.data]
-
-        elif EMBEDDING_METHOD == "mpnet":
-            embeddings = st_model.encode(text_list)
-            embeddings = [np.array(emb, dtype=np.float32).tobytes() for emb in embeddings]
 
         elif EMBEDDING_METHOD == "ollama":
             embeddings = [

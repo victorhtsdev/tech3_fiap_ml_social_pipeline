@@ -87,3 +87,17 @@ export const ChartDescription = styled.p`
   text-align: center;
   margin-bottom: 15px;
 `;
+
+export const ExpandButton = styled.button`
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 14px;
+  margin-top: 10px;
+  cursor: pointer;
+  font-weight: bold;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;

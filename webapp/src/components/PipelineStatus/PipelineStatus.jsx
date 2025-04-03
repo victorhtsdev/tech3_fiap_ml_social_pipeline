@@ -45,7 +45,7 @@ const PipelineStatus = ({ selectedItem }) => {
           </div>
         ))
       ) : (
-        <p>Selecione um item para visualizar o status.</p>
+        <p>Loading...</p>
       )}
     </div>
   );

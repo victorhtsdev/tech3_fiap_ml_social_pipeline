@@ -1,6 +1,13 @@
 import React, { useEffect, useState, useMemo } from "react";
 import Plot from "react-plotly.js";
-import { ScatterContainer, HighlightCard, ChartTitle, ChartDescription, ScatterWrapper } from "./styles";
+import {
+  ScatterContainer,
+  HighlightCard,
+  ChartTitle,
+  ChartDescription,
+  ScatterWrapper
+} from "./styles";
+import api from "../../services/api"; 
 
 const Scatter3D = ({ execId, categoryColors, hiddenCategories }) => {
   const [data, setData] = useState([]);
@@ -9,8 +16,8 @@ const Scatter3D = ({ execId, categoryColors, hiddenCategories }) => {
   useEffect(() => {
     const fetchEmbeddings = async () => {
       try {
-        const response = await fetch(`http://127.0.0.1:5000/api/get_embeddings?exec_id=${execId}`);
-        const jsonData = await response.json();
+        const response = await api.get(`/get_embeddings?exec_id=${execId}`);
+        const jsonData = response.data;
 
         if (!jsonData || jsonData.length === 0) {
           console.error("Nenhum dado recebido da API.");
@@ -19,7 +26,7 @@ const Scatter3D = ({ execId, categoryColors, hiddenCategories }) => {
 
         const enrichedData = jsonData.map((item, index) => ({
           ...item,
-          pointIndex: index, 
+          pointIndex: index,
         }));
 
         setData(enrichedData);
@@ -39,8 +46,10 @@ const Scatter3D = ({ execId, categoryColors, hiddenCategories }) => {
 
   const fetchCommentHighlight = async (contentId) => {
     try {
-      const response = await fetch(`http://127.0.0.1:5000/api/get_content_highlight?exec_id=${execId}&content_id=${contentId}`);
-      const jsonData = await response.json();
+      const response = await api.get(
+        `/get_content_highlight?exec_id=${execId}&content_id=${contentId}`
+      );
+      const jsonData = response.data;
 
       if (jsonData.error) {
         console.error("Erro ao buscar o comentário:", jsonData.error);
@@ -87,10 +96,10 @@ const Scatter3D = ({ execId, categoryColors, hiddenCategories }) => {
               },
             }}
             config={{
-              responsive: true, // 🔥 Garante que ele se ajuste sem scroll
-              displayModeBar: false, // 🔥 Esconde barra de ferramentas extra
+              responsive: true,
+              displayModeBar: false,
             }}
-            style={{ width: "100%", height: "400px", maxWidth: "100%" }} // 🔥 Evita overflow horizontal
+            style={{ width: "100%", height: "400px", maxWidth: "100%" }}
             onClick={(event) => {
               if (!event.points || event.points.length === 0) return;
 

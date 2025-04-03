@@ -80,6 +80,11 @@ const NewAnalysisScreen = ({
   const handleDateChange = (index, field, value) => {
     const updated = [...dateRanges];
     updated[index][field] = value;
+
+    if (field === "start" && value) {
+      updated[index].end = value;
+    }
+
     setDateRanges(updated);
   };
 

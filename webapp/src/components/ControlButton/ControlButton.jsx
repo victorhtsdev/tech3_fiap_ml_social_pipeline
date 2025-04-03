@@ -1,15 +1,28 @@
 import React from "react";
 import { ButtonContainer } from "./styles";
-import { Plus } from "lucide-react";
+import { Plus, BarChart3 } from "lucide-react";
 
-const ControlButton = ({ searchTerm, selectedItem, onClick }) => {
-  const isDisabled = !searchTerm && !selectedItem;
-  const buttonLabel = "New Analysis";
+const icons = {
+  plus: <Plus size={16} />,
+  "bar-chart-3": <BarChart3 size={16} />
+};
+
+const ControlButton = ({
+  searchTerm,
+  selectedItem,
+  onClick,
+  icon = "plus",
+  label = "New Analysis",
+  requireSelection = false
+}) => {
+  const isDisabled = requireSelection
+    ? !selectedItem && !searchTerm
+    : false;
 
   return (
     <ButtonContainer disabled={isDisabled} onClick={onClick}>
-      <Plus size={16} />
-      {buttonLabel}
+      {icons[icon]}
+      {label}
     </ButtonContainer>
   );
 };

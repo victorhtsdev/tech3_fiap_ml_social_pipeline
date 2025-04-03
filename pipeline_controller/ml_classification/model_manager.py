@@ -1,26 +1,31 @@
 import pickle
 import os
 
-MODEL_DIR = os.path.join(os.path.dirname(__file__), "models")
-SVM_MODEL_PATH = os.path.join(MODEL_DIR, "svm_model.pkl")
-ENCODER_PATH = os.path.join(MODEL_DIR, "label_encoder.pkl")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+LOCAL_DEFAULT_PATH = os.path.join(BASE_DIR, "models")
+MODEL_DIR = os.getenv("MODEL_DIR", LOCAL_DEFAULT_PATH)
 
-def load_model():
-    """Carrega o modelo SVM treinado."""
-    with open(SVM_MODEL_PATH, "rb") as f:
+
+def load_model(filename):
+    """Carrega um modelo treinado a partir do nome do arquivo."""
+    model_path = os.path.join(MODEL_DIR, filename)
+    with open(model_path, "rb") as f:
         return pickle.load(f)
 
-def load_label_encoder():
-    """Carrega o LabelEncoder treinado."""
-    with open(ENCODER_PATH, "rb") as f:
+def load_label_encoder(filename):
+    """Carrega um LabelEncoder treinado a partir do nome do arquivo."""
+    encoder_path = os.path.join(MODEL_DIR, filename)
+    with open(encoder_path, "rb") as f:
         return pickle.load(f)
 
-def save_model(model):
-    """Salva um modelo SVM atualizado."""
-    with open(SVM_MODEL_PATH, "wb") as f:
+def save_model(model, filename):
+    """Salva um modelo treinado no arquivo informado."""
+    model_path = os.path.join(MODEL_DIR, filename)
+    with open(model_path, "wb") as f:
         pickle.dump(model, f)
 
-def save_label_encoder(encoder):
-    """Salva um LabelEncoder atualizado."""
-    with open(ENCODER_PATH, "wb") as f:
+def save_label_encoder(encoder, filename):
+    """Salva um LabelEncoder no arquivo informado."""
+    encoder_path = os.path.join(MODEL_DIR, filename)
+    with open(encoder_path, "wb") as f:
         pickle.dump(encoder, f)

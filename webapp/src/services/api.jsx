@@ -1,8 +1,28 @@
 import axios from "axios";
 
+const baseURL = process.env.REACT_APP_API_BASE_URL;
+
 const api = axios.create({
-  baseURL: "http://127.0.0.1:5000/api",
+  baseURL,
 });
+
+const existingToken = localStorage.getItem("jwt_token");
+if (existingToken) {
+  api.defaults.headers.common["Authorization"] = `Bearer ${existingToken}`;
+}
+
+export const fetchAndStoreToken = async () => {
+  try {
+    const response = await axios.get(`${baseURL}/get_token`);
+    const token = response.data.token;
+
+    localStorage.setItem("jwt_token", token);
+    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    console.log("🔐 Token JWT armazenado.");
+  } catch (error) {
+    console.error("🚨 Erro ao buscar token JWT:", error);
+  }
+};
 
 export const getMenuItems = async () => {
   try {
@@ -98,6 +118,40 @@ export const getModelsInfo = async () => {
       models: {}
     };
   }
+};
+
+export const deleteAnalysisByExecId = async (execId) => {
+  try {
+    const response = await api.delete(`/delete_execution?exec_id=${execId}`);
+    return response.data;
+  } catch (error) {
+    console.error("🚨 Error deleting analysis:", error);
+    throw error;
+  }
+};
+
+export const getModelMetrics = async () => {
+  try {
+    const response = await api.get("/get_model_metrics");
+    return response.data;
+  } catch (error) {
+    console.error("🚨 Error fetching model metrics:", error);
+    return {};
+  }
+};
+
+export const getSentencesByLabel = async (execId, label) => {
+  const response = await api.get("/get_sentences_by_label", {
+    params: { exec_id: execId, label },
+  });
+  return response.data;
+};
+
+export const getTimeSeriesLabel = async (execId) => {
+  const response = await api.get("/get_time_series_label", {
+    params: { exec_id: execId },
+  });
+  return response.data;
 };
 
 export default api;

@@ -7,7 +7,6 @@ __pycache__/
 *.sqlite
 *.db
 pipeline_controller/teste.py
-pipeline_controller/analysis
 pipeline_controller/ml_classification/models/
 
 # 🔹 Logs e arquivos temporários

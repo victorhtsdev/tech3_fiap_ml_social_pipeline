@@ -6,6 +6,7 @@ export const ControlPanelContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-start;
+  gap: 12px; 
   padding: 0 20px;
   background: white;
   border-bottom: 1px solid #ddd;
@@ -16,6 +17,7 @@ export const ControlPanelContainer = styled.div`
   overflow: hidden;
   z-index: 5;
 `;
+
 
 export const ControlPanelDivider = styled.div`
   width: 100%;

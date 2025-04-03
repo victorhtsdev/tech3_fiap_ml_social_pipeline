@@ -9,10 +9,15 @@ import {
 } from "./styles";
 import { Search } from "lucide-react";
 import { getMenuItems } from "../../services/api";
-import ControlPanel from "../ControlPanel/ControlPanel";
 
-const Sidebar = ({ setSelectedItem, setReloadAnalysisList }) => {
-  const [searchTerm, setSearchTerm] = useState("");
+const Sidebar = ({
+  setSelectedItem,
+  setReloadAnalysisList,
+  searchTerm,
+  setSearchTerm,
+  reloadAnalysisList,
+  setCurrentScreen // ✅ nova prop
+}) => {
   const [menuItems, setMenuItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
   const [selectedItem, setLocalSelectedItem] = useState(null);
@@ -29,15 +34,23 @@ const Sidebar = ({ setSelectedItem, setReloadAnalysisList }) => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    fetchData();
+  }, [reloadAnalysisList]);
+
   const handleSearch = (event) => {
     const query = event.target.value.toLowerCase();
     setSearchTerm(query);
-    setLocalSelectedItem(null);
-
+  
+    if (query.trim() !== "") {
+      setLocalSelectedItem(null);
+      setSelectedItem(null); 
+    }
+  
     const filtered = menuItems.filter(item =>
       item.name.toLowerCase().includes(query)
     );
-
+  
     setFilteredItems(filtered);
   };
 
@@ -45,49 +58,41 @@ const Sidebar = ({ setSelectedItem, setReloadAnalysisList }) => {
     setLocalSelectedItem(item);
     setSelectedItem(item);
     setSearchTerm("");
+    setCurrentScreen("analysis");
   };
 
   return (
-    <>
-      <SidebarContainer>
-        <SearchBarWrapper>
-          <SearchBar>
-            <Search size={18} />
-            <input
-              type="text"
-              placeholder="Search terms..."
-              value={searchTerm}
-              onChange={handleSearch}
-            />
-          </SearchBar>
-        </SearchBarWrapper>
+    <SidebarContainer>
+      <SearchBarWrapper>
+        <SearchBar>
+          <Search size={18} />
+          <input
+            type="text"
+            placeholder="Search terms..."
+            value={searchTerm}
+            onChange={handleSearch}
+          />
+        </SearchBar>
+      </SearchBarWrapper>
 
-        <Divider />
+      <Divider />
 
-        <MenuWrapper>
-          {filteredItems.length > 0 ? (
-            filteredItems.map(item => (
-              <MenuItem
-                key={item.id}
-                className={selectedItem?.id === item.id ? "active" : ""}
-                onClick={() => handleSelect(item)}
-              >
-                {item.name}
-              </MenuItem>
-            ))
-          ) : (
-            <p>No terms found.</p>
-          )}
-        </MenuWrapper>
-      </SidebarContainer>
-
-      <ControlPanel
-        searchTerm={searchTerm}
-        selectedItem={selectedItem}
-        refreshSidebar={fetchData}
-        setReloadAnalysisList={setReloadAnalysisList}
-      />
-    </>
+      <MenuWrapper>
+        {filteredItems.length > 0 ? (
+          filteredItems.map(item => (
+            <MenuItem
+              key={item.id}
+              className={selectedItem?.id === item.id ? "active" : ""}
+              onClick={() => handleSelect(item)}
+            >
+              {item.name}
+            </MenuItem>
+          ))
+        ) : (
+          <p>No terms found.</p>
+        )}
+      </MenuWrapper>
+    </SidebarContainer>
   );
 };
 

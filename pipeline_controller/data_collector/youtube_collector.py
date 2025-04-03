@@ -3,6 +3,7 @@ import requests
 import pandas as pd
 from dotenv import load_dotenv
 import logging
+from datetime import datetime
 
 load_dotenv()
 
@@ -160,6 +161,13 @@ def collect_youtube_data(search, date_ranges):
                     comment_text = comment_data["textDisplay"]
                     author = comment_data["authorDisplayName"]
                     comment_date = comment_data["publishedAt"]
+
+                    comment_dt = datetime.fromisoformat(comment_date.replace("Z", "+00:00"))
+                    end_dt = datetime.fromisoformat(f"{end_date}T23:59:59+00:00")
+
+                    if comment_dt > end_dt:
+                        logging.info(f"⏭️ Ignoring comment on {comment_dt.date()} (after end date {end_dt.date()})")
+                        continue
 
                     results.append({
                         "video_title": video_title,

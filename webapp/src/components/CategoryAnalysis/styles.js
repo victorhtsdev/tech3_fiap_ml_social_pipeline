@@ -1,4 +1,15 @@
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
+
+const slideUp = keyframes`
+  0% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+`;
 
 export const CategoryAnalysisContainer = styled.div`
   width: 100%;
@@ -35,8 +46,13 @@ export const BackButton = styled.button`
   color: #374151;
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease;
-  
+
   &:hover {
     background: #e5e7eb;
   }
+`;
+
+export const AnimatedBlock = styled.div`
+  width: 100%;
+  animation: ${slideUp} 0.6s ease-out both;
 `;

@@ -12,10 +12,16 @@ from data_storage.data_getter import get_word_cloud_data
 from data_storage.data_getter import get_category_colors
 from data_storage.data_getter import get_content_highlight
 from data_storage.data_getter import get_models_info
+from .auth import token_required, generate_token
+from data_storage.data_delete import delete_execution_data
+from data_storage.data_getter import get_model_metrics_grouped
+from data_storage.data_getter import get_sentences_by_label_grouped
+from data_storage.data_getter import get_time_series_label_count
 
 api = Blueprint("api", __name__)
 
 @api.route("/run_pipeline", methods=["POST"])
+@token_required
 def run_pipeline_api():
     data = request.json
     search = data.get("search", "Nintendo Switch 2")
@@ -35,6 +41,7 @@ def run_pipeline_api():
     return jsonify({"message": "Pipeline started", "exec_id": str(exec_id)})
 
 @api.route("/get_ml_execution_last_version", methods=["GET"])
+@token_required
 def get_ml_execution_api():
     try:
         result = get_latest_ml_execution()
@@ -46,8 +53,9 @@ def get_ml_execution_api():
 
     except Exception as e:
         return jsonify({"error": "Internal Server Error"}), 500
-    
+
 @api.route("/get_pipeline_status", methods=["GET"])
+@token_required
 def get_pipeline_status_api():
     exec_id = request.args.get("exec_id")
 
@@ -59,6 +67,7 @@ def get_pipeline_status_api():
     return jsonify(result)
 
 @api.route("/get_ml_executions_by_search", methods=["GET"])
+@token_required
 def get_ml_executions_by_search_api():
     search = request.args.get("search")
 
@@ -77,6 +86,7 @@ def get_ml_executions_by_search_api():
         return jsonify({"error": "Internal Server Error"}), 500
 
 @api.route("/get_embeddings", methods=["GET"])
+@token_required
 def get_embeddings_api():
     exec_id = request.args.get("exec_id")
 
@@ -93,9 +103,9 @@ def get_embeddings_api():
 
     except Exception as e:
         return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
-    
 
 @api.route("/get_svm_category_counts", methods=["GET"])
+@token_required
 def get_svm_category_counts_api():  
     exec_id = request.args.get("exec_id")
 
@@ -112,9 +122,9 @@ def get_svm_category_counts_api():
 
     except Exception as e:
         return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
-    
 
 @api.route("/get_word_cloud", methods=["GET"])
+@token_required
 def get_word_cloud():
     exec_id = request.args.get("exec_id")
 
@@ -131,8 +141,9 @@ def get_word_cloud():
 
     except Exception as e:
         return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
-    
+
 @api.route("/get_category_colors", methods=["GET"])
+@token_required
 def get_category_colors_route():
     exec_id = request.args.get("exec_id", "").strip()
 
@@ -144,6 +155,7 @@ def get_category_colors_route():
     return jsonify(color_map)
 
 @api.route("/get_content_highlight", methods=["GET"])
+@token_required
 def get_content_highlight_api():
     exec_id = request.args.get("exec_id", "").strip()
     content_id = request.args.get("content_id", "").strip()
@@ -161,11 +173,84 @@ def get_content_highlight_api():
 
     except Exception as e:
         return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
-    
+
 @api.route("/get_models", methods=["GET"])
+@token_required
 def get_models_api():
     try:
         result = get_models_info()
         return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
+
+@api.route("/get_token", methods=["GET"])
+def get_token_api():
+    return jsonify({"token": generate_token()})
+
+@api.route("/delete_execution", methods=["DELETE"])
+@token_required
+def delete_execution_api():
+    exec_id = request.args.get("exec_id", "").strip().strip('"')
+
+    if not exec_id:
+        return jsonify({"error": "Parameter 'exec_id' is required"}), 400
+
+    try:
+        delete_execution_data(exec_id)
+        return jsonify({"message": f"Data successfully deleted for exec_id: {exec_id}"})
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to delete data: {str(e)}"}), 500
+    
+@api.route("/get_model_metrics", methods=["GET"])
+@token_required
+def get_model_metrics_api():
+    try:
+        result = get_model_metrics_grouped()
+
+        if not result:
+            return jsonify({"message": "No model metrics found"}), 404
+
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
+
+@api.route("/get_sentences_by_label", methods=["GET"])
+@token_required
+def get_sentences_by_label_api():
+    exec_id = request.args.get("exec_id", "").strip()
+    label = request.args.get("label", "").strip()
+
+    if not exec_id or not label:
+        return jsonify({"error": "Parameters 'exec_id' and 'label' are required"}), 400
+
+    try:
+        result = get_sentences_by_label_grouped(exec_id, label)
+
+        if not result:
+            return jsonify({"message": "No sentences found"}), 404
+
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
+    
+@api.route("/get_time_series_label", methods=["GET"])
+@token_required
+def get_time_series_api():
+    exec_id = request.args.get("exec_id", "").strip()
+
+    if not exec_id:
+        return jsonify({"error": "Parameter 'exec_id' is required"}), 400
+
+    try:
+        result = get_time_series_label_count(exec_id)
+
+        if not result:
+            return jsonify({"message": "No time series data found"}), 404
+
+        return jsonify(result)
+
     except Exception as e:
         return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
