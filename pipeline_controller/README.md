@@ -1,4 +1,3 @@
-
 # Backend - Análise de Comentários do YouTube
 
 Este backend foi desenvolvido em Flask e faz parte do projeto de Análise de Comentários do YouTube com LLM e Machine Learning, os métodos são utilizados pela aplicação frontend.
@@ -222,7 +221,7 @@ Este backend foi desenvolvido em Flask e faz parte do projeto de Análise de Com
 ]
 ```
 
-### Série Temporal por Label
+### Série Temporal por categoria
 **URL:** `/get_time_series_label?exec_id=<uuid>`  
 **Método:** `GET`  
 **Token:** Requerido  
