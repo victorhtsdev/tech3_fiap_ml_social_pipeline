@@ -1,45 +1,67 @@
 # Análise de Comentários do YouTube com LLM e Machine Learning
 
-Este projeto foi desenvolvido como parte do curso de pós-graduação em Machine Learning Engineering da FIAP, no contexto do Tech Challenge da fase voltada a MLOps. O objetivo foi projetar e implementar um pipeline de coleta, processamento e análise de dados de forma automatizada, integrando diferentes tecnologias e técnicas de aprendizado de máquina.
+## Descrição
 
-## Visão Geral do Projeto
+Este projeto foi desenvolvido como parte do curso de pós-graduação em **Machine Learning Engineering** da **FIAP**, durante o **Tech Challenge 3**, focado na aplicação prática dos conhecimentos da fase de **MLOps**. O objetivo foi projetar e implementar um pipeline completo de coleta, processamento e análise de dados utilizando técnicas modernas de NLP, modelos supervisionados e uma aplicação web para visualização dos resultados.
 
-A proposta consiste em coletar comentários do YouTube relacionados a termos de busca definidos pelo usuário, rotular automaticamente esses comentários utilizando um modelo de linguagem (LLM), gerar embeddings com a API da OpenAI e treinar modelos supervisionados (SVM e XGBoost) para classificação. O projeto também conta com uma aplicação web que permite realizar novas análises com base em modelos já treinados e visualizar os resultados por meio de gráficos interativos.
-
-## Estrutura do Projeto
-
-. ├── backend/ # API Flask para orquestração e análise ├── frontend/ # Aplicação React para visualização ├── notebooks/ # Notebooks de experimentação e treino ├── data/ # Armazenamento local de dados (opcional) ├── models/ # Modelos treinados e versionados ├── requirements.txt # Dependências ├── README.md # Documentação do projeto └── docker/ # Arquivos de configuração do ambiente
-
-markdown
-Copy
-Edit
+---
 
 ## Tecnologias Utilizadas
 
-- Python (Flask, pandas, scikit-learn, SQLAlchemy)
-- React (com Axios, Plotly para visualizações)
-- OpenAI API (para embeddings)
-- DeepSeek LLM (para rotulagem automática)
-- YouTube Data API v3
-- PostgreSQL (armazenamento dos dados)
-- Docker (opcional, para deploy local)
-- AWS EC2 (para hospedagem da aplicação)
-- AWS RDS (PostgreSQL gerenciado na nuvem)
+- **Python**: Linguagem principal do backend e notebooks.
+- **Flask**: Framework para construção da API REST.
+- **React**: Framework utilizado no frontend para visualização interativa.
+- **OpenAI API**: Geração de embeddings com `text-embedding-3-large`.
+- **DeepSeek LLM**: Utilizado para rotulagem automática dos comentários.
+- **SVM (Support Vector Machine)**: Modelo supervisionado treinado com os embeddings rotulados.
+- **XGBoost**: Modelo supervisionado adicional treinado com os mesmos dados para comparação de desempenho.
+- **YouTube Data API v3**: Coleta de vídeos e comentários com base em termos de busca.
+- **PostgreSQL**: Banco de dados relacional para armazenar os dados processados.
+- **Docker**: Criação de ambiente padronizado (local ou nuvem).
+- **AWS EC2**: Hospedagem da aplicação backend e frontend.
+- **AWS RDS**: Instância gerenciada do PostgreSQL para armazenamento na nuvem.
 
-## Etapas da Solução
+---
 
-1. **Coleta de Comentários**: o usuário insere um termo de busca, intervalo de datas e seleciona um modelo para análise. A API do YouTube é usada para coletar vídeos e comentários.
-2. **Rotulagem com LLM**: os comentários são enviados para um modelo de linguagem (DeepSeek) que retorna categorias sugeridas.
-3. **Geração de Embeddings**: os textos rotulados são vetorizados com a API de embeddings da OpenAI.
-4. **Treinamento Supervisionado**: com os dados vetorizados, os modelos SVM e XGBoost são treinados e avaliados.
-5. **Aplicação Web**: permite a realização de novas buscas, a seleção de modelos treinados e a visualização interativa dos resultados.
+## Diagrama do Pipeline
 
-## Funcionalidades da Aplicação
+![Diagrama do Pipeline](/documents/diagrama_pipeline_youtube.png)
 
-- Busca de vídeos e coleta de comentários diretamente da interface
-- Escolha do modelo treinado para aplicar em novas análises
-- Exibição de gráficos como:
-  - Distribuição de categorias
-  - Gráfico de série temporal
+---
+
+## Visão Geral da Solução
+
+O sistema foi dividido em duas grandes etapas: **treinamento** e **aplicação**.
+
+### Etapa 1 - Treinamento do Modelo
+
+- Coleta de comentários a partir de termos definidos.
+- Rotulagem automática utilizando LLM (DeepSeek), aproveitando a capacidade do modelo para compreender linguagem natural e sugerir categorias coerentes.
+- Geração de embeddings com a API da OpenAI.
+- Treinamento de modelos supervisionados (SVM e XGBoost), que embora sejam algoritmos menos robustos quando comparados aos próprios LLMs, foram escolhidos por sua **eficiência e rapidez na inferência**, permitindo uma aplicação mais leve e responsiva.
+- Armazenamento dos modelos treinados e suas métricas.
+
+### Etapa 2 - Aplicação Web
+
+- Usuário define novo termo de busca e intervalo de datas.
+- Comentários são coletados e analisados usando modelo treinado.
+- Resultados são exibidos por meio de gráficos interativos:
+  - Distribuição por categoria
+  - Frequencia de categorias
+  - Série temporal
   - Projeção 3D dos embeddings
   - Comparação entre modelos
+
+---
+
+## Resultados Obtidos
+
+O sistema foi publicado em ambiente na AWS (EC2 + RDS) para a correção e permite explorar os comentários de vídeos públicos com base em modelos treinados. As análises produzidas demonstram como é possível usar LLMs de forma estratégica para **rotulagem automática** e, em seguida, treinar **modelos mais leves e eficientes** que possam ser usados em produção com rapidez.
+
+As principais entregas do projeto incluem:
+
+- Um pipeline funcional de coleta, processamento, vetorização e treinamento.
+- Uma interface web simples, mas interativa, para novas análises.
+- Modelos supervisionados capazes de classificar comentários automaticamente com base em rótulos pré-definidos, reduzindo custos e tempo de resposta em relação ao uso direto de LLMs na inferência.
+
+---
