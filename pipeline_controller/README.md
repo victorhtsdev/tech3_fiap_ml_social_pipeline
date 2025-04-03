@@ -27,6 +27,7 @@ Este backend foi desenvolvido em Flask e faz parte do projeto de Análise de Com
 **Token:** Requerido  
 **Descrição:** Inicia o processo de coleta, rotulagem, vetorização e classificação.  
 **Parâmetros:**
+- `200 OK` 
 ```json
 {
   "search": "string",
@@ -36,8 +37,8 @@ Este backend foi desenvolvido em Flask e faz parte do projeto de Análise de Com
   "classification_model_type": "CONSOLE"
 }
 ```
-**Respostas:**
-- `200 OK`: Pipeline iniciado com sucesso.
+**Resposta:**
+- `200 OK` 
 ```json
 {
   "message": "Pipeline started",
