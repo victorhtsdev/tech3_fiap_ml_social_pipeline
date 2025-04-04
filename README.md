@@ -5,7 +5,11 @@
 Este projeto foi desenvolvido como parte do curso de pós-graduação em **Machine Learning Engineering** da **FIAP**, durante o **Tech Challenge 3**, focado na aplicação prática dos conhecimentos da fase de **MLOps**. O objetivo foi projetar e implementar um pipeline completo de coleta, processamento e análise de dados utilizando técnicas modernas de NLP, modelos supervisionados e uma aplicação web para visualização dos resultados.
 
 ---
+## Diagrama de treinamento
 
+![Diagrama do Pipeline](../documents/treinamento_modelo.png)
+
+---
 ## Tecnologias Utilizadas
 
 - **Python**: Linguagem principal do backend e notebooks.
