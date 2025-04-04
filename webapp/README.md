@@ -4,6 +4,12 @@ Este frontend foi desenvolvido em React e faz parte do projeto de Análise de Co
 
 ---
 
+## Diagrama Aplicação Web
+
+![Diagrama do Pipeline](../documents/diagrama_frontend.png)
+
+---
+
 ## Interface da Aplicação
 
 > Abaixo estão prints das principais etapas da aplicação, como seleção de termo, execução do pipeline e visualização de resultados.

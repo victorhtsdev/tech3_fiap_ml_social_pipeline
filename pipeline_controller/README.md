@@ -4,6 +4,12 @@ Este backend foi desenvolvido em Flask e faz parte do projeto de Análise de Com
 
 ---
 
+## Diagrama do Pipeline Principal
+
+![Diagrama do Pipeline](../documents/diagrama_backend_pipeline.png)
+
+---
+
 ## Autenticação
 
 ### Gerar Token
