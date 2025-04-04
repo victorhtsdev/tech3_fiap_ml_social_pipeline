@@ -33,7 +33,7 @@ Tendo isto em vista o objetivo do projeto foi projetar e implementar um pipeline
 
 ## Visão Geral da Solução
 
-O sistema foi dividido em 3 grandes etapas: **treinamento**, **aplicação web** e **aplicação backend** .
+O sistema foi dividido em 3 módulos: **treinamento**, **aplicação web** e **aplicação backend** .
 
 ---
 
