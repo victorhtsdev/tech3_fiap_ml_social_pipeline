@@ -31,7 +31,7 @@ Este projeto foi desenvolvido como parte do curso de pós-graduação em **Machi
 
 ## Visão Geral da Solução
 
-O sistema foi dividido em duas grandes etapas: **treinamento** e **aplicação**.
+O sistema foi dividido em 3 grandes etapas: **treinamento**, **aplicação web** e **aplicação backend** .
 
 ---
 
