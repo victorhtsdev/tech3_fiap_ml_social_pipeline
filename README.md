@@ -57,7 +57,9 @@ O sistema foi dividido em 3 grandes etapas: **treinamento**, **aplicação web**
   - Projeção 3D dos embeddings
   - Comparação entre modelos
   - A aplicação web está disponível na pasta web_app/.
-  
+
+  ![Diagrama do aplicacao Web](./documents/diagrama_frontend.png)
+
 ## Backend e APIs
 
 - Expor endpoint para **iniciar o pipeline** de análise (`/run_pipeline`)
@@ -70,6 +72,9 @@ O sistema foi dividido em 3 grandes etapas: **treinamento**, **aplicação web**
   - Série temporal de comentários por categoria
   - Métricas e versões dos modelos treinados
   - O backend da aplicação está localizado na pasta `backend/` e é responsável por toda a lógica de orquestração do pipeline e exposição das APIs REST utilizadas pelo frontend.
+ 
+  ![Diagrama backend](./documents/diagrama_backend_pipeline.png)
+  
   ---
 
 ## Resultados Obtidos
