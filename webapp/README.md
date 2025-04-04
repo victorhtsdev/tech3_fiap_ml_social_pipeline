@@ -1,70 +1,81 @@
-# Getting Started with Create React App
+# Frontend - Análise de Comentários do YouTube
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Este frontend foi desenvolvido em React e faz parte do projeto de Análise de Comentários do YouTube com LLM e Machine Learning, integrando com a API Flask disponível no backend.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## Interface da Aplicação
 
-### `npm start`
+> Abaixo estão prints das principais etapas da aplicação, como seleção de termo, execução do pipeline e visualização de resultados.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+<p align="center">
+  <img src="./public/images/painel_principal.png" width="80%" alt="Painel Principal" />
+</p>
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
+## Funcionalidades Principais
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Campo de busca para termos no YouTube.
+- Seleção de modelo treinado (SVM ou XGBoost).
+- Escolha de intervalo de datas para análise.
+- Visualização de resultados com gráficos interativos:
+  - Distribuição por categoria
+  - Série temporal de comentários
+  - Projeção 3D dos embeddings
+  - Análise por comentário original
+  - Comparativo entre modelos
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Fluxo de Uso da Aplicação
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 1. Seleção de Termo
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Na **Sidebar**, o usuário pode selecionar um termo previamente analisado ou pesquisar um novo termo pelo campo de busca. A seleção ativa libera os botões principais da aplicação.
 
-### `npm run eject`
+<p align="center">
+  <img src="./public/images/sidebar_busca.png" width="70%" alt="Busca e Seleção de Termo" />
+</p>
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+---
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### 2. Nova Análise com o Botão "New Analysis"
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Ao clicar no botão **New Analysis**, o usuário define um ou mais intervalos de datas e escolhe qual modelo treinado será utilizado. Essa ação inicia o pipeline completo (coleta, rotulagem, embeddings, classificação).
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+<p align="center">
+  <img src="./public/images/nova_analise_form.png" width="70%" alt="Formulário Nova Análise" />
+</p>
 
-## Learn More
+---
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### 3. Acompanhamento do Pipeline
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Durante a execução, é possível acompanhar o progresso de cada etapa na lateral direita da tela. O pipeline é assíncrono e mostra o status de cada estágio.
 
-### Code Splitting
+<p align="center">
+  <img src="./public/images/status_pipeline.png" width="70%" alt="Status do Pipeline" />
+</p>
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+---
 
-### Analyzing the Bundle Size
+### 4. Visualização das Análises Concluídas
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+Após a conclusão do pipeline, a nova análise aparece na lista. Clicando no item, o sistema exibe todos os gráficos e resultados de forma interativa.
 
-### Making a Progressive Web App
+<p align="center">
+  <img src="./public/images/resultados_graficos.png" width="80%" alt="Resultados da Análise" />
+</p>
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+---
 
-### Advanced Configuration
+### 5. Exploração de Modelos com "Model Explorer"
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+O botão **Model Explorer** leva o usuário a uma área específica para visualizar os modelos treinados, suas versões, tipos e métricas comparativas de desempenho.
 
-### Deployment
+<p align="center">
+  <img src="./public/images/model_explorer.png" width="80%" alt="Model Explorer" />
+</p>
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+---
