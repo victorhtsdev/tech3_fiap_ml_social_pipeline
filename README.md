@@ -23,7 +23,7 @@ Este projeto foi desenvolvido como parte do curso de pós-graduação em **Machi
 
 ---
 
-## Diagrama do Pipeline
+## Diagrama Geral do Projeto
 
 ![Diagrama do Pipeline](/documents/diagrama_geral.png)
 
