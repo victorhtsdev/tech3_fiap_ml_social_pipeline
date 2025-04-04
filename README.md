@@ -11,11 +11,6 @@ Este projeto foi desenvolvido como parte do curso de pós-graduação em **Machi
 
 ---
 
-## Diagrama Treinamento Modelo
-
-![Diagrama do Pipeline](./documents/treinamento_modelo.png)
-
----
 ## Tecnologias Utilizadas
 
 - **Python**: Linguagem principal do backend e notebooks.
@@ -39,9 +34,17 @@ Este projeto foi desenvolvido como parte do curso de pós-graduação em **Machi
 
 ---
 
+## Diagrama Treinamento Modelo
+
+![Diagrama do Pipeline](./documents/treinamento_modelo.png)
+
+---
+
 ## Visão Geral da Solução
 
 O sistema foi dividido em duas grandes etapas: **treinamento** e **aplicação**.
+
+---
 
 ### Etapa 1 - Treinamento do Modelo
 
