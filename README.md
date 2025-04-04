@@ -25,7 +25,7 @@ Este projeto foi desenvolvido como parte do curso de pós-graduação em **Machi
 
 ## Diagrama do Pipeline
 
-![Diagrama do Pipeline](/documents/diagrama_pipeline_youtube.png)
+![Diagrama do Pipeline](/documents/diagrama_geral.png)
 
 ---
 
