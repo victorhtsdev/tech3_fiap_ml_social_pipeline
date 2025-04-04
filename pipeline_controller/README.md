@@ -10,6 +10,45 @@ Este backend foi desenvolvido em Flask e faz parte do projeto de Análise de Com
 
 ---
 
+## Variáveis de Ambiente
+
+As seguintes variáveis devem ser definidas no `.env` para garantir o funcionamento correto do backend:
+
+- **DATABASE_URL**: String de conexão com o banco PostgreSQL (local ou RDS).
+  - Exemplo: `postgresql://postgres:senha@localhost:5432/ml_social_db`
+
+- **YOUTUBE_API_KEY**: Chave da API do YouTube Data v3 utilizada para buscar vídeos e comentários.
+
+- **YOUTUBE_NUM_VIDEOS**: Quantidade de vídeos retornados por execução de busca (default: `12`).
+
+- **YOUTUBE_NUM_COMMENTS**: Número de comentários coletados por vídeo (default: `100`).
+
+- **YOUTUBE_MAX_SEARCH_CALLS**: Número máximo de chamadas à API por execução (limita a quantidade de páginas retornadas).
+
+- **YOUTUBE_NUM_VIDEOS_PER_REQUEST**: Quantidade de vídeos por chamada à API (máx. permitido pelo YouTube: `50`).
+
+- **YOUTUBE_ALLOWED_COUNTRY**: País dos vídeos a serem buscados. Exemplo: `BR`.
+
+- **YOUTUBE_ALLOWED_LANGUAGE**: Idioma dos vídeos e comentários. Exemplo: `pt`.
+
+- **OPENAI_API_KEY**: Chave da API da OpenAI utilizada para gerar os embeddings com o modelo `text-embedding-3-large`.
+
+- **LANGUAGE**: Idioma principal do projeto. Exemplo: `pt`.
+
+- **EMBEDDING_METHOD**: Método de geração dos embeddings. Exemplo: `openai`.
+
+- **EMBEDDING_MODEL**: Nome do modelo usado para gerar embeddings. Exemplo: `text-embedding-3-large`.
+
+- **EMBEDDING_BATCH_SIZE**: Número de frases processadas por vez para gerar embeddings (batch).
+
+- **SEED**: Valor usado como semente para garantir reprodutibilidade. Exemplo: `42`.
+
+- **JWT_SECRET_KEY**: Chave secreta usada para geração e validação dos tokens JWT.
+
+- **JWT_ALGORITHM**: Algoritmo utilizado no JWT. Exemplo: `HS256`.
+
+---
+
 ## Autenticação
 
 ### Gerar Token
