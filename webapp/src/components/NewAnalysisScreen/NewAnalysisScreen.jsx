@@ -40,7 +40,18 @@ const NewAnalysisScreen = ({
 
       getModelsInfo().then((data) => {
         setModelTypes(data.types);
-        setModelsByType(data.models);
+
+        const updatedModels = {};
+        for (const type of data.types) {
+          updatedModels[type] = data.models[type].map((model) => ({
+            ...model,
+            label: model.is_recommended
+              ? `${model.label} ✅`
+              : model.label
+          }));
+        }
+
+        setModelsByType(updatedModels);
       });
     }
   }, [isOpen, searchTerm]);
@@ -90,7 +101,7 @@ const NewAnalysisScreen = ({
 
   const handleSubmit = async () => {
     const selected = modelsForType.find((m) => m.id === selectedModel);
-    const modelLabelParts = selected?.label?.split(" - v") || [];
+    const modelLabelParts = selected?.label?.replace("✅ ", "").split(" - v") || [];
 
     const payload = {
       search: localSearchTerm.current,

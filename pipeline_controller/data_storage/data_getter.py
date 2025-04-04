@@ -577,7 +577,8 @@ def get_models_info():
             MLModel.id,
             MLModel.model_name,
             MLModel.model_version,
-            MLModel.model_type
+            MLModel.model_type,
+            MLModel.is_recommended
         ).order_by(desc(MLModel.model_version)).all()
 
         if not models:
@@ -590,7 +591,8 @@ def get_models_info():
             grouped_models[t] = [
                 {
                     "id": str(m.id),
-                    "label": f"{m.model_name} - v{m.model_version}"
+                    "label": f"{m.model_name} - v{m.model_version}",
+                    "is_recommended": m.is_recommended
                 }
                 for m in models if m.model_type == t
             ]
