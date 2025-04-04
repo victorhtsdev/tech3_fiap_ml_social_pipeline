@@ -4,7 +4,7 @@
 
 Este projeto foi desenvolvido como parte do curso de pós-graduação em **Machine Learning Engineering** da **FIAP**, durante o **Tech Challenge 3**, focado na aplicação prática dos conhecimentos da fase de treinamento de modelos. 
 
-Tendo isto em vista o objetivo do projeto foi projetar e implementar um pipeline completo de coleta, processamento e análise de dados utilizando técnicas de NLP, modelos supervisionados mais simples que demandam menos recursos computacionais que o LLM utilizado para rotular os dados e uma aplicação web para visualização dos resultados.
+Com base nesse contexto, o objetivo do projeto foi projetar e implementar um pipeline completo para coleta, processamento e análise de dados, utilizando técnicas de NLP e modelos supervisionados mais leves — que demandam menos recursos computacionais do que o LLM usado na etapa de rotulagem. Além disso, foi desenvolvida uma aplicação web para visualização dos resultados obtidos.
 
 ---
 
