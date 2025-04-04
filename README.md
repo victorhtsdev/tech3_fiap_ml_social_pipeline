@@ -29,27 +29,24 @@ Este projeto foi desenvolvido como parte do curso de pós-graduação em **Machi
 
 ---
 
-## Diagrama Treinamento Modelo
-
-![Diagrama do Pipeline](./documents/treinamento_modelo.png)
-
----
-
 ## Visão Geral da Solução
 
 O sistema foi dividido em duas grandes etapas: **treinamento** e **aplicação**.
 
 ---
 
-### Etapa 1 - Treinamento do Modelo
+### Notebook de treinamento do modelo
 
 - Coleta de comentários a partir de termos definidos.
 - Rotulagem automática utilizando LLM (DeepSeek), aproveitando a capacidade do modelo para compreender linguagem natural e sugerir categorias coerentes.
 - Geração de embeddings com a API da OpenAI.
 - Treinamento de modelos supervisionados (SVM e XGBoost), que embora sejam algoritmos menos robustos quando comparados aos próprios LLMs, foram escolhidos por sua **eficiência e rapidez na inferência**, permitindo uma aplicação mais leve e responsiva.
 - Armazenamento dos modelos treinados e suas métricas.
+- Os notebooks de treinamento estão localizados na pasta notebooks/, responsáveis por coleta, rotulagem, vetorização e treino dos modelos de ML.
 
-### Etapa 2 - Aplicação Web
+![Diagrama do Pipeline](./documents/treinamento_modelo.png)
+
+### Aplicação Web
 
 - Usuário define novo termo de busca e intervalo de datas.
 - Comentários são coletados e analisados usando modelo treinado.
@@ -59,8 +56,21 @@ O sistema foi dividido em duas grandes etapas: **treinamento** e **aplicação**
   - Série temporal
   - Projeção 3D dos embeddings
   - Comparação entre modelos
+  - A aplicação web está disponível na pasta web_app/.
+  
+## Backend e APIs
 
----
+- Expor endpoint para **iniciar o pipeline** de análise (`/run_pipeline`)
+- Gerenciar **status de execução**, execuções anteriores e exclusão de análises
+- Disponibilizar dados para visualização:
+  - Embeddings e rótulos por execução
+  - Contagem por categoria (SVM)
+  - Word cloud por rótulo
+  - Frases agrupadas por comentário original
+  - Série temporal de comentários por categoria
+  - Métricas e versões dos modelos treinados
+  - O backend da aplicação está localizado na pasta `backend/` e é responsável por toda a lógica de orquestração do pipeline e exposição das APIs REST utilizadas pelo frontend.
+  ---
 
 ## Resultados Obtidos
 
