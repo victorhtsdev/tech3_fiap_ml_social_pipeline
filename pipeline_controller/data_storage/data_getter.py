@@ -19,6 +19,7 @@ from models.ml_model import MLModel
 from models.model_metric import ModelMetric
 from models.class_metric import ClassMetric
 from collections import defaultdict
+from ml_classification.model_manager import load_pca
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -347,7 +348,21 @@ def get_embeddings_by_exec_id(exec_id, max_samples=100):
 
         selected_embeddings = np.array(selected_embeddings)
 
-        _, reduced_embeddings = compute_pca(selected_embeddings)
+        model_info = get_model_info_from_execution(exec_id)
+        if not model_info:
+            raise ValueError("❌ Could not retrieve model info from execution.")
+
+        model_type = model_info["model_type"].lower()
+        model_version = model_info["model_version"]
+        pca_filename = f"pca_{model_type}_v{model_version}.pkl"
+
+        try:
+            pca = load_pca(pca_filename)
+            reduced_embeddings = pca.transform(selected_embeddings)
+            logging.info(f"📦 PCA successfully applied using {pca_filename}")
+        except FileNotFoundError:
+            reduced_embeddings = selected_embeddings
+            logging.info("ℹ️ PCA not found. Using original embeddings.")
 
         response_data = [
             {
@@ -359,7 +374,7 @@ def get_embeddings_by_exec_id(exec_id, max_samples=100):
             for i in range(len(selected_sentences))
         ]
 
-        logging.info(f"✅ Successfully processed {len(response_data)} embeddings for exec_id: {exec_id} (PCA applied)")
+        logging.info(f"✅ Successfully processed {len(response_data)} embeddings for exec_id: {exec_id}")
         return response_data
 
     except SQLAlchemyError as e:

@@ -29,3 +29,15 @@ def save_label_encoder(encoder, filename):
     encoder_path = os.path.join(MODEL_DIR, filename)
     with open(encoder_path, "wb") as f:
         pickle.dump(encoder, f)
+
+def load_pca(filename):
+    """Carrega um objeto PCA salvo."""
+    pca_path = os.path.join(MODEL_DIR, filename)
+    with open(pca_path, "rb") as f:
+        return pickle.load(f)
+
+def save_pca(pca, filename):
+    """Salva um objeto PCA no arquivo informado."""
+    pca_path = os.path.join(MODEL_DIR, filename)
+    with open(pca_path, "wb") as f:
+        pickle.dump(pca, f)
