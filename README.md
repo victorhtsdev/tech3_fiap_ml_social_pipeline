@@ -73,7 +73,7 @@ O sistema foi dividido em 3 módulos: **treinamento**, **aplicação web** e **a
   - Frases agrupadas por comentário original
   - Série temporal de comentários por categoria
   - Métricas e versões dos modelos treinados
-  - O backend da aplicação está localizado na pasta `backend/` e é responsável por toda a lógica de orquestração do pipeline e exposição das APIs REST utilizadas pelo frontend.
+  - O backend da aplicação está localizado na pasta `pipeline_controller/` e é responsável por toda a lógica de orquestração do pipeline e exposição das APIs REST utilizadas pelo frontend.
  
   ![Diagrama backend](./documents/diagrama_backend_pipeline.png)
   
