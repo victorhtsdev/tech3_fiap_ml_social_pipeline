@@ -6,6 +6,7 @@ Este projeto foi desenvolvido como parte do curso de pós-graduação em **Machi
 
 Com base nesse contexto, o objetivo do projeto foi projetar e implementar um pipeline completo para coleta, processamento e análise de dados, utilizando técnicas de NLP e modelos supervisionados mais leves — que demandam menos recursos computacionais do que o LLM usado na etapa de rotulagem. Além disso, foi desenvolvida uma aplicação web para visualização dos resultados obtidos.
 
+![Diagrama do Pipeline](./documents/web_app.png)
 ---
 
 ## Tecnologias Utilizadas
