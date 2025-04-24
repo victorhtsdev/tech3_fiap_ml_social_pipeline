@@ -10,7 +10,7 @@ Destaques do projeto:
 
 - Rotulagem utilizando um Large Language Model (LLM) para classificar frases em múltiplas categorias;
 
-- Treinamento de modelos supervisionados leves (SVM, XGBoost) com base nos rótulos gerados;
+- Treinamento de modelos supervisionados mais leves (SVM, XGBoost) com base nos rótulos gerados;
 
 - Desenvolvimento de uma aplicação web para busca de termos, execução dos modelos e visualização das análises;
 
