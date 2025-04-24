@@ -1,10 +1,24 @@
-# Análise de Comentários do YouTube com LLM e Machine Learning
+# Analisador de Comentários do YouTube com LLM e Modelos Supervisionados Eficientes
 
 ## Descrição
 
-Este projeto foi desenvolvido como parte do curso de pós-graduação em **Machine Learning Engineering** da **FIAP**, durante o **Tech Challenge 3**, focado na aplicação prática dos conhecimentos da fase de treinamento de modelos. 
+Projeto desenvolvido no Tech Challenge 3 da pós-graduação em Machine Learning Engineering (FIAP), com o objetivo de construir um pipeline completo para análise de comentários do YouTube, com foco em temas como jogos, celulares e tecnologia.
 
-Com base nesse contexto, o objetivo do projeto foi projetar e implementar um pipeline completo para coleta, processamento e análise de dados, utilizando técnicas de NLP e modelos supervisionados mais leves — que demandam menos recursos computacionais do que o LLM usado na etapa de rotulagem. Além disso, foi desenvolvida uma aplicação web para visualização dos resultados obtidos.
+Destaques do projeto:
+
+- Coleta automática de comentários via YouTube Data API;
+
+- Rotulagem utilizando um Large Language Model (LLM) para classificar frases em múltiplas categorias;
+
+- Treinamento de modelos supervisionados leves (SVM, XGBoost) com base nos rótulos gerados;
+
+- Desenvolvimento de uma aplicação web para busca de termos, execução dos modelos e visualização das análises;
+
+- Visualizações interativas, como evolução temporal por categoria e distribuição temática.
+
+Este projeto integra técnicas de NLP com práticas de engenharia de machine learning, aplicando rotulagem inteligente com LLM e modelos mais leves para análise em larga escala com menor custo computacional.
+
+![Diagrama do Pipeline](./documents/web_app2.png)
 
 ![Diagrama do Pipeline](./documents/web_app.png)
 ---
