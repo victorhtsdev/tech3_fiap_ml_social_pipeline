@@ -2,7 +2,7 @@
 
 ## Descrição
 
-Projeto desenvolvido no Tech Challenge 3 da pós-graduação em Machine Learning Engineering (FIAP), com o objetivo de construir um pipeline completo para análise de comentários do YouTube, com foco em temas como jogos, celulares e tecnologia.
+Projeto desenvolvido no Tech Challenge 3 da pós-graduação em Machine Learning Engineering (FIAP), com o objetivo de construir um pipeline completo para análise de comentários do YouTube, com foco em consoles e smartphones.
 
 Destaques do projeto:
 
