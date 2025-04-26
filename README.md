@@ -18,7 +18,7 @@ Destaques do projeto:
 
 Este projeto integra técnicas de NLP com práticas de engenharia de machine learning, aplicando rotulagem inteligente com LLM e modelos mais leves para análise em larga escala com menor custo computacional.
 
-![Diagrama do Pipeline](./documents/web_app.png)
+![Diagrama do Pipeline](./documents/web_app2.png)
 
 ![Diagrama do Pipeline](./documents/web_app.png)
 ---
